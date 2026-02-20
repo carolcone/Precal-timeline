@@ -1,0 +1,2785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Math That Built the World — A Precalculus Timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+/* ======= CSS VARIABLES ======= */
+:root {
+  --bg: #0e0e12;
+  --surface: #15151c;
+  --card: #1a1a24;
+  --card-warm: #1c1a28;
+  --border: rgba(255,255,255,0.07);
+  --accent: #7c6fff;
+  --accent2: #4fc3f7;
+  --accent3: #f06292;
+  --gold: #d4a847;
+  --text: #e8e6f0;
+  --text-muted: #8884a0;
+  --text-dim: #55536a;
+  --timeline-line: rgba(124,111,255,0.3);
+  --glow: rgba(124,111,255,0.15);
+  --radius: 12px;
+  --radius-lg: 20px;
+}
+
+/* ======= RESET & BASE ======= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  cursor: none;
+  overflow-x: hidden;
+}
+
+@media (pointer: coarse) {
+  body { cursor: auto; }
+  #custom-cursor { display: none; }
+}
+
+/* ======= CUSTOM CURSOR ======= */
+#custom-cursor {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.1s ease;
+}
+
+#custom-cursor svg {
+  width: 36px; height: 36px;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 8px var(--accent));
+}
+
+/* ======= PROGRESS BAR ======= */
+#progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  z-index: 1000;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* ======= MINI MAP ======= */
+#map-container {
+  position: fixed;
+  top: 20px; right: 20px;
+  width: 220px; height: 160px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  z-index: 500;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+  transition: opacity 0.3s;
+}
+
+#map-toggle {
+  display: none;
+  position: fixed;
+  top: 20px; right: 20px;
+  z-index: 501;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  #map-container { display: none; width: 100%; height: 250px; top: 0; right: 0; border-radius: 0; }
+  #map-container.visible { display: block; }
+  #map-toggle { display: block; }
+}
+
+/* ======= HERO ======= */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+#hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(124,111,255,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(79,195,247,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.hero-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  opacity: 0.8;
+}
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(3rem, 8vw, 7rem);
+  font-weight: 300;
+  line-height: 1.05;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #fff 0%, #c4beff 50%, #7c6fff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  color: var(--text-muted);
+  margin-bottom: 48px;
+  max-width: 600px;
+}
+
+.hero-meta {
+  display: flex;
+  gap: 40px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.hero-scroll-hint {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  animation: bob 2s ease-in-out infinite;
+}
+
+@keyframes bob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* ======= TIMELINE CONTAINER ======= */
+#timeline {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 60px 20px 120px;
+  position: relative;
+}
+
+#timeline::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, var(--timeline-line) 10%, var(--timeline-line) 90%, transparent);
+  transform: translateX(-50%);
+}
+
+@media (max-width: 768px) {
+  #timeline::before { left: 24px; }
+}
+
+/* ======= ERA DIVIDERS ======= */
+.era-divider {
+  text-align: center;
+  margin: 80px 0 60px;
+  position: relative;
+  z-index: 1;
+}
+
+.era-divider span {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  background: var(--bg);
+  padding: 0 20px;
+}
+
+.era-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0; right: 0;
+  height: 1px;
+  background: var(--border);
+  z-index: -1;
+}
+
+/* ======= TIMELINE EVENT ======= */
+.event {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  gap: 0 20px;
+  margin-bottom: 80px;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  position: relative;
+}
+
+.event.visible { opacity: 1; transform: translateY(0); }
+
+.event.left .event-card { grid-column: 1; grid-row: 1; text-align: right; align-items: flex-end; }
+.event.left .event-dot { grid-column: 2; grid-row: 1; }
+.event.left .event-empty { grid-column: 3; grid-row: 1; }
+
+.event.right .event-empty { grid-column: 1; grid-row: 1; }
+.event.right .event-dot { grid-column: 2; grid-row: 1; }
+.event.right .event-card { grid-column: 3; grid-row: 1; }
+
+.event-dot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 28px;
+}
+
+.dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 3px rgba(124,111,255,0.3), 0 0 20px rgba(124,111,255,0.4);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.dot.active {
+  animation: pulse-dot 2s ease infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(124,111,255,0.3), 0 0 20px rgba(124,111,255,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(124,111,255,0.1), 0 0 40px rgba(124,111,255,0.5); }
+}
+
+.event-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.event-empty { display: block; }
+
+@media (max-width: 768px) {
+  .event {
+    grid-template-columns: 48px 1fr;
+    grid-template-rows: auto;
+  }
+  .event.left .event-card,
+  .event.right .event-card {
+    grid-column: 2; grid-row: 1;
+    text-align: left;
+    align-items: flex-start;
+  }
+  .event.left .event-dot,
+  .event.right .event-dot { grid-column: 1; grid-row: 1; }
+  .event.left .event-empty,
+  .event.right .event-empty { display: none; }
+  .event-dot { padding-top: 24px; justify-content: flex-end; padding-right: 16px; }
+}
+
+/* ======= EVENT CARD CONTENT ======= */
+.event-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.event-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.7rem;
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.event-location {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+}
+
+.event-location::before { content: '◉ '; color: var(--accent2); font-size: 8px; }
+
+.event-desc {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  max-width: 380px;
+  line-height: 1.75;
+}
+
+.event.left .event-desc { margin-left: auto; }
+
+/* ======= EXPANDABLE SECTIONS ======= */
+.expandable {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--card);
+  max-width: 400px;
+}
+
+.event.left .expandable { margin-left: auto; }
+
+.expandable-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  width: 100%;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  text-align: left;
+  gap: 10px;
+  transition: background 0.2s;
+}
+
+.expandable-header:hover { background: rgba(255,255,255,0.03); }
+.expandable-header:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+.toggle-icon {
+  font-size: 16px;
+  color: var(--accent);
+  transition: transform 0.3s;
+  flex-shrink: 0;
+  font-family: monospace;
+  line-height: 1;
+}
+
+.expandable.open .toggle-icon,
+.meanwhile-inner.open .toggle-icon { transform: rotate(45deg); }
+
+.expandable-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+.expandable.open .expandable-content,
+.meanwhile-inner.open .expandable-content { max-height: 2000px; }
+
+.expandable-inner {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.8;
+}
+
+/* ======= MEANWHILE BREAKOUT ======= */
+.meanwhile {
+  margin: -40px 0 80px;
+  display: flex;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s;
+}
+
+.meanwhile.visible { opacity: 1; transform: translateY(0); }
+
+.meanwhile-inner {
+  border: 1px solid rgba(212,168,71,0.2);
+  background: rgba(212,168,71,0.04);
+  border-radius: var(--radius);
+  max-width: 500px;
+  overflow: hidden;
+}
+
+.meanwhile-inner .expandable-header {
+  color: var(--gold);
+  letter-spacing: 0.15em;
+}
+
+.meanwhile-inner .toggle-icon { color: var(--gold); }
+.meanwhile-inner .expandable-inner { border-color: rgba(212,168,71,0.15); font-style: italic; color: #b0a870; }
+
+.meanwhile-images {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.meanwhile-img-wrap {
+  flex: 1;
+  min-width: 100px;
+  max-width: 160px;
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(212,168,71,0.15);
+  background: rgba(0,0,0,0.3);
+}
+
+.meanwhile-img-wrap img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  display: block;
+  filter: sepia(0.4) brightness(0.75);
+  transition: filter 0.3s;
+}
+
+.meanwhile-img-wrap:hover img { filter: sepia(0.2) brightness(0.9); }
+
+.meanwhile-img-caption {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: rgba(212,168,71,0.5);
+  padding: 4px 6px;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ======= MEET BUTTON ======= */
+.meet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid rgba(124,111,255,0.3);
+  color: var(--accent);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+
+.meet-btn:hover {
+  background: rgba(124,111,255,0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(124,111,255,0.2);
+}
+
+.meet-btn:focus { outline: 2px solid var(--accent); }
+
+/* ======= MATHEMATICIAN PROFILE MODAL ======= */
+#modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 800;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+#modal-overlay.open { display: flex; }
+
+.profile-modal {
+  background: var(--card-warm);
+  border: 1px solid rgba(124,111,255,0.2);
+  border-radius: var(--radius-lg);
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(124,111,255,0.1);
+  animation: modal-in 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.95) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.profile-header {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 24px;
+  padding: 28px 28px 0;
+  align-items: start;
+}
+
+@media (max-width: 500px) {
+  .profile-header { grid-template-columns: 1fr; }
+}
+
+.profile-avatar {
+  width: 100px; height: 100px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(124,111,255,0.2), rgba(79,195,247,0.1));
+  border: 1px solid rgba(124,111,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.profile-title-block { display: flex; flex-direction: column; gap: 6px; }
+
+.profile-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.profile-dates {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+}
+
+.profile-headline {
+  font-style: italic;
+  color: var(--accent);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.05rem;
+  margin-top: 4px;
+}
+
+.profile-vibe {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+}
+
+.vibe-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(124,111,255,0.1);
+  border: 1px solid rgba(124,111,255,0.2);
+  color: var(--accent);
+}
+
+.profile-body {
+  padding: 24px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-field { display: flex; flex-direction: column; gap: 4px; }
+
+.field-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.field-value {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+}
+
+.difficulty-stars {
+  display: flex; gap: 4px; align-items: center; margin-top: 4px;
+}
+
+.star { font-size: 14px; }
+.star.filled { color: var(--gold); }
+.star.empty { color: var(--border); }
+
+.connections { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+
+.conn-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(79,195,247,0.08);
+  border: 1px solid rgba(79,195,247,0.2);
+  color: var(--accent2);
+}
+
+.profile-interactive {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.interactive-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--accent2);
+  margin-bottom: 12px;
+}
+
+/* ======= SHARED INTERACTIVE STYLES ======= */
+.range-container { display: flex; flex-direction: column; gap: 8px; }
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(124,111,255,0.5);
+}
+
+input[type=range]:focus { outline: 2px solid var(--accent); outline-offset: 4px; }
+
+.range-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.output-display {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent2);
+}
+
+canvas { display: block; width: 100%; border-radius: 8px; }
+
+button.sim-btn {
+  background: rgba(124,111,255,0.1);
+  border: 1px solid rgba(124,111,255,0.3);
+  color: var(--accent);
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+button.sim-btn:hover { background: rgba(124,111,255,0.2); }
+button.sim-btn:focus { outline: 2px solid var(--accent); }
+
+.modal-close-btn {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px 0;
+}
+
+.close-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.close-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+
+/* ======= NUMBER INPUT ======= */
+.num-input {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.num-input:focus { border-color: var(--accent); }
+
+/* ======= SELECT ======= */
+select.styled-select {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  width: 100%;
+  outline: none;
+  cursor: pointer;
+}
+
+select.styled-select:focus { border-color: var(--accent); }
+
+/* ======= TOGGLE ROW ======= */
+.toggle-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+
+.toggle-opt {
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  transition: all 0.2s;
+  user-select: none;
+  background: transparent;
+}
+
+.toggle-opt.active {
+  border-color: var(--accent);
+  background: rgba(124,111,255,0.1);
+  color: var(--accent);
+}
+
+/* ======= LOGIC GATE DISPLAY ======= */
+.gate-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr 24px 1fr;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.gate-io {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.bit-btn {
+  width: 36px; height: 20px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.bit-btn.on { background: rgba(124,111,255,0.5); border-color: var(--accent); }
+
+.bit-btn::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.bit-btn.on::after { transform: translateX(16px); background: #fff; }
+
+.gate-symbol {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.gate-results { display: flex; flex-direction: column; gap: 6px; }
+
+.gate-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.result-indicator {
+  width: 28px; height: 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: var(--text-dim);
+  transition: all 0.2s;
+}
+
+.result-indicator.true {
+  background: rgba(124,111,255,0.3);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ======= OSCILLOSCOPE ======= */
+#osc-canvas {
+  background: #000;
+  height: 80px;
+  border-radius: 8px;
+  image-rendering: crisp-edges;
+}
+
+/* ======= CONIC DIAGRAM ======= */
+.conic-diagram { display: none; }
+.conic-diagram.active { display: block; }
+#conic-canvas { background: rgba(0,0,0,0.4); height: 120px; }
+
+/* ======= FIBONACCI SPIRAL ======= */
+#fib-canvas { height: 120px; background: rgba(0,0,0,0.4); }
+
+/* ======= EQUATION FLIP ======= */
+.equation-display {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+  text-align: center;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.3s;
+}
+
+/* ======= LOG SCALE ======= */
+.log-output {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--accent2);
+  margin-top: 4px;
+}
+
+/* ======= BINARY CONVERTER ======= */
+.binary-result {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.binary-box {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.binary-box-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.binary-box-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--accent2);
+  word-break: break-all;
+}
+
+/* ======= GEO DISPLAY ======= */
+.geo-display {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.geo-box {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.geo-box-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.geo-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent2);
+}
+
+/* ======= COMPOUND INTEREST ======= */
+#interest-canvas { height: 120px; background: rgba(0,0,0,0.4); }
+
+/* ======= PHASOR CANVAS ======= */
+#phasor-canvas { height: 120px; background: #000; }
+
+/* ======= SCROLLBAR ======= */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,111,255,0.3); border-radius: 2px; }
+
+/* ======= FOOTER ======= */
+footer {
+  text-align: center;
+  padding: 60px 20px;
+  border-top: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+}
+
+/* Profile scrollbar */
+.profile-modal::-webkit-scrollbar { width: 4px; }
+.profile-modal::-webkit-scrollbar-thumb { background: rgba(124,111,255,0.2); }
+
+</style>
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<div id="custom-cursor">
+  <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <text x="2" y="26" font-family="serif" font-size="22" fill="rgba(124,111,255,0.9)">∫</text>
+    <text x="18" y="20" font-family="monospace" font-size="11" fill="rgba(79,195,247,0.8)">f(x)</text>
+  </svg>
+</div>
+
+<!-- PROGRESS BAR -->
+<div id="progress-bar" style="width:0%"></div>
+
+<!-- MINI MAP -->
+<button id="map-toggle" onclick="toggleMap()">🗺 Map</button>
+<div id="map-container">
+  <div id="map" style="width:100%;height:100%"></div>
+</div>
+
+<!-- MODAL OVERLAY -->
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-name">
+  <div class="profile-modal" id="active-profile"></div>
+</div>
+
+<!-- HERO -->
+<section id="hero">
+  <p class="hero-eyebrow">~2000 BCE — 2026 CE</p>
+  <h1 class="hero-title">The Math That<br>Built the World</h1>
+  <p class="hero-subtitle">A living history of mathematics — the minds, the moments, and the discoveries that made modern civilization possible</p>
+  <div class="hero-meta">
+    <span>26 mathematicians</span>
+    <span>4,000 years</span>
+    <span>1 unbroken thread</span>
+  </div>
+  <div class="hero-scroll-hint">
+    <span>Scroll to begin</span>
+    <svg width="12" height="20" viewBox="0 0 12 20" fill="none">
+      <path d="M6 0v14M1 9l5 5 5-5" stroke="rgba(124,111,255,0.5)" stroke-width="1.5"/>
+    </svg>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<div id="timeline"></div>
+
+<footer>
+  <p>Made for precalculus students who want to know <em>why</em> any of this matters.</p>
+</footer>
+
+<script>
+// ======= CURSOR =======
+const cursor = document.getElementById('custom-cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+
+// ======= PROGRESS BAR =======
+window.addEventListener('scroll', () => {
+  const pct = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+});
+
+// ======= MAP =======
+let map, activePin, pinLayer;
+function initMap() {
+  if (typeof L === 'undefined') {
+    document.getElementById('map-container').style.display = 'none';
+    document.getElementById('map-toggle').style.display = 'none';
+    return;
+  }
+  map = L.map('map', { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+  map.setView([30, 30], 2);
+  pinLayer = L.layerGroup().addTo(map);
+}
+
+const geoPoints = {
+  babylonians: [32.54, 44.42],
+  euclid: [31.2, 29.9],
+  archimedes: [37.07, 15.28],
+  apollonius: [36.84, 30.7],
+  ptolemy: [31.2, 29.9],
+  aryabhata: [25.6, 85.1],
+  alkhwarizmi: [33.34, 44.4],
+  fibonacci: [43.72, 10.4],
+  cardano: [45.46, 9.19],
+  viete: [48.85, 2.35],
+  napier: [55.95, -3.19],
+  descartes: [52.37, 4.9],
+  newton: [52.2, 0.12],
+  bernoulli: [47.56, 7.59],
+  euler: [59.93, 30.32],
+  gauss: [52.27, 10.53],
+  fourier: [47.9, 1.9],
+  boole: [51.9, -8.47],
+  cantor: [52.52, 13.4],
+  poincare: [48.85, 2.35],
+  einstein: [47.37, 8.54],
+  turing: [51.75, -1.26],
+  shannon: [42.36, -71.06],
+  wiles: [51.51, -0.12],
+  perelman: [59.93, 30.32],
+  tao: [34.07, -118.44]
+};
+
+const visitedPins = [];
+
+function panMapTo(key) {
+  if (!map || !geoPoints[key] || typeof L === 'undefined') return;
+  const coords = geoPoints[key];
+  map.flyTo(coords, 4, { duration: 1.2 });
+  pinLayer.clearLayers();
+  visitedPins.forEach(p => {
+    L.circleMarker(p, { radius: 4, color: 'rgba(124,111,255,0.3)', fillColor: 'rgba(124,111,255,0.2)', fillOpacity: 1, weight: 1 }).addTo(pinLayer);
+  });
+  visitedPins.push(coords);
+  L.circleMarker(coords, { radius: 7, color: 'var(--accent)', fillColor: '#7c6fff', fillOpacity: 0.9, weight: 2 }).addTo(pinLayer);
+}
+
+function toggleMap() {
+  const mc = document.getElementById('map-container');
+  mc.classList.toggle('visible');
+}
+
+window.addEventListener('load', initMap);
+
+// ======= MODAL =======
+function openModal(key) {
+  const data = PROFILES[key];
+  if (!data) return;
+  const el = document.getElementById('active-profile');
+  el.innerHTML = buildProfile(data);
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => initInteractive(key), 100);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+function buildProfile(d) {
+  const stars = n => Array(5).fill(0).map((_, i) => `<span class="star ${i < n ? 'filled' : 'empty'}">${i < n ? '★' : '☆'}</span>`).join('');
+  const conns = d.connections.map(c => `<span class="conn-tag">${c}</span>`).join('');
+  const vibes = d.vibe.map(v => `<span class="vibe-tag">${v}</span>`).join('');
+  return `
+    <div class="modal-close-btn"><button class="close-btn" onclick="closeModal()" aria-label="Close">✕</button></div>
+    <div class="profile-header">
+      <div class="profile-avatar">${d.emoji}</div>
+      <div class="profile-title-block">
+        <div class="profile-name" id="modal-name">${d.name}</div>
+        <div class="profile-dates">${d.dates}</div>
+        <div class="profile-headline">"${d.headline}"</div>
+        <div class="profile-vibe">${vibes}</div>
+      </div>
+    </div>
+    <div class="profile-body">
+      <div class="profile-field">
+        <div class="field-label">🏙 Hometown / Based In</div>
+        <div class="field-value">${d.location}</div>
+      </div>
+      <div class="profile-field">
+        <div class="field-label">🧠 Their Big Idea</div>
+        <div class="field-value">${d.bigIdea}</div>
+      </div>
+      <div class="profile-field">
+        <div class="field-label">⚡ Fun / Surprising Fact</div>
+        <div class="field-value">${d.funFact}</div>
+      </div>
+      <div class="profile-field">
+        <div class="field-label">🔗 Worked With / Influenced By</div>
+        <div class="connections">${conns}</div>
+      </div>
+      <div class="profile-field">
+        <div class="field-label">📊 Difficulty For Precalc Students</div>
+        <div class="difficulty-stars">${stars(d.difficulty)}</div>
+      </div>
+      <div class="profile-interactive">
+        <div class="interactive-label">⚡ Why It Still Matters — Interactive</div>
+        <div class="field-value" style="margin-bottom:12px;font-size:0.82rem">${d.modernUse}</div>
+        <div id="interactive-${d.key}">${d.interactiveHTML}</div>
+      </div>
+    </div>`;
+}
+
+// ======= EXPANDABLE TOGGLE =======
+function toggleExpand(el) {
+  el.classList.toggle('open');
+  const btn = el.querySelector('.expandable-header');
+  const expanded = el.classList.contains('open');
+  btn.setAttribute('aria-expanded', expanded);
+  const content = el.querySelector('.expandable-content');
+  if (!expanded) content.querySelectorAll('[tabindex]').forEach(e => e.setAttribute('tabindex', '-1'));
+}
+
+// ======= SCROLL ANIMATIONS =======
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      const key = e.target.dataset.mapKey;
+      if (key) panMapTo(key);
+    }
+  });
+}, { threshold: 0.15 });
+
+// ======= INTERACTIVE INITIALIZERS =======
+function initInteractive(key) {
+  switch(key) {
+    case 'babylonians': initGeo('babylonians'); break;
+    case 'euclid': initGates(); break;
+    case 'archimedes': initArchimedes(); break;
+    case 'apollonius': initConic(); break;
+    case 'ptolemy': initOscilloscope(); break;
+    case 'aryabhata': initBinary(); break;
+    case 'alkhwarizmi': initAlgorithm(); break;
+    case 'fibonacci': initFibonacci(); break;
+    case 'cardano': initDice(); break;
+    case 'viete': initViete(); break;
+    case 'napier': initLog(); break;
+    case 'descartes': initGeo('descartes'); break;
+    case 'newton': initNewton(); break;
+    case 'bernoulli': initCompound(); break;
+    case 'euler': initPhasor(); break;
+    case 'gauss': initGauss(); break;
+    case 'fourier': initFourier(); break;
+    case 'boole': initBooleanCalc(); break;
+    case 'cantor': initCantor(); break;
+    case 'turing': initTuring(); break;
+    case 'shannon': initShannon(); break;
+  }
+}
+
+// ---- GEO (Babylonians + Descartes) ----
+function initGeo(key) {
+  const prefix = key === 'babylonians' ? 'bab' : 'desc';
+  const btn = document.getElementById(`${prefix}-geo-btn`);
+  const out = document.getElementById(`${prefix}-geo-out`);
+  if (!btn || !out) return;
+  btn.addEventListener('click', () => {
+    out.style.display = 'block';
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (key === 'babylonians') {
+          const latDMS = toDMS(lat, true);
+          const lngDMS = toDMS(lng, false);
+          out.innerHTML = `
+            <div class="geo-display">
+              <div class="geo-box"><div class="geo-box-label">Decimal (Modern)</div><div class="geo-val">${lat.toFixed(5)}°, ${lng.toFixed(5)}°</div></div>
+              <div class="geo-box"><div class="geo-box-label">D° M' S″ — The Babylonian Way</div><div class="geo-val">${latDMS}, ${lngDMS}</div></div>
+            </div>`;
+        } else {
+          out.innerHTML = `
+            <div class="geo-box" style="margin-top:4px">
+              <div class="geo-box-label">Descartes Located You</div>
+              <div class="geo-val">x = ${lng.toFixed(5)} (longitude)<br>y = ${lat.toFixed(5)} (latitude)</div>
+            </div>`;
+        }
+      }, () => {
+        out.textContent = 'Location denied. Try: 41.8781, -87.6298 (Chicago)';
+      });
+    } else {
+      out.textContent = 'Geolocation not supported by your browser.';
+    }
+  });
+}
+
+function toDMS(decimal, isLat) {
+  const dir = isLat ? (decimal >= 0 ? 'N' : 'S') : (decimal >= 0 ? 'E' : 'W');
+  const abs = Math.abs(decimal);
+  const deg = Math.floor(abs);
+  const minFull = (abs - deg) * 60;
+  const min = Math.floor(minFull);
+  const sec = ((minFull - min) * 60).toFixed(1);
+  return `${deg}° ${min}′ ${sec}″ ${dir}`;
+}
+
+// ---- EUCLID LOGIC GATES ----
+function initGates() {
+  const inputs = { a: false, b: false };
+  function update() {
+    ['and','or','not'].forEach(gate => {
+      const el = document.getElementById(`gate-${gate}`);
+      if (!el) return;
+      let val;
+      if (gate === 'and') val = inputs.a && inputs.b;
+      else if (gate === 'or') val = inputs.a || inputs.b;
+      else val = !inputs.a;
+      el.textContent = val ? '1' : '0';
+      el.classList.toggle('true', val);
+    });
+  }
+  ['a','b'].forEach(bit => {
+    const btn = document.getElementById(`bit-${bit}`);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      inputs[bit] = !inputs[bit];
+      btn.classList.toggle('on', inputs[bit]);
+      document.getElementById(`bit-${bit}-label`).textContent = inputs[bit] ? '1' : '0';
+      update();
+    });
+  });
+  update();
+}
+
+// ---- ARCHIMEDES POLYGON -> PI ----
+function initArchimedes() {
+  const slider = document.getElementById('arch-sides');
+  const out = document.getElementById('arch-pi');
+  const canvas = document.getElementById('arch-canvas');
+  if (!slider || !canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 120 * window.devicePixelRatio || 120;
+  canvas.style.height = '120px';
+  function draw(n) {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    const r = Math.min(W,H) * 0.38;
+    const cx = W/2, cy = H/2;
+    // circle
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle = 'rgba(79,195,247,0.3)'; ctx.lineWidth = 1.5; ctx.stroke();
+    // polygon
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const a = (i/n)*Math.PI*2 - Math.PI/2;
+      const x = cx + r*Math.cos(a), y = cy + r*Math.sin(a);
+      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(124,111,255,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = 'rgba(124,111,255,0.08)'; ctx.fill();
+    // pi approx
+    const piApprox = n * Math.sin(Math.PI/n);
+    out.textContent = `n=${n} sides → π ≈ ${piApprox.toFixed(8)}  (actual: ${Math.PI.toFixed(8)})`;
+  }
+  slider.addEventListener('input', () => draw(parseInt(slider.value)));
+  draw(parseInt(slider.value));
+}
+
+// ---- APOLLONIUS CONIC ----
+function initConic() {
+  const canvas = document.getElementById('conic-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 120 * window.devicePixelRatio || 120;
+  ['para','ellipse','hyperbola'].forEach(type => {
+    const btn = document.getElementById(`conic-${type}`);
+    if (btn) btn.addEventListener('click', () => {
+      document.querySelectorAll('.conic-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      drawConic(ctx, type, canvas.width, canvas.height);
+      document.querySelectorAll('.conic-desc').forEach(d => d.style.display = 'none');
+      const desc = document.getElementById(`conic-desc-${type}`);
+      if (desc) desc.style.display = 'block';
+    });
+  });
+  drawConic(ctx, 'para', canvas.width, canvas.height);
+}
+
+function drawConic(ctx, type, W, H) {
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle = 'rgba(124,111,255,0.8)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  if (type === 'para') {
+    const cx = W/2, top = H*0.1;
+    for (let x = -W/2; x <= W/2; x += 2) {
+      const y = top + (x*x)/(W*0.8);
+      const px = cx+x, py = y;
+      if (py > H) continue;
+      x === -W/2 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+    }
+    // focus
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, top + W*W/(4*(W*0.8)), 4, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(240,98,146,0.8)'; ctx.fill();
+  } else if (type === 'ellipse') {
+    const cx = W/2, cy = H/2;
+    ctx.ellipse(cx, cy, W*0.38, H*0.32, 0, 0, Math.PI*2);
+    ctx.stroke();
+    const a = W*0.38, b = H*0.32;
+    const c = Math.sqrt(Math.abs(a*a - b*b));
+    ctx.beginPath(); ctx.arc(cx-c, cy, 4, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(240,98,146,0.8)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+c, cy, 4, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(240,98,146,0.8)'; ctx.fill();
+  } else {
+    const cx = W/2, cy = H/2;
+    for (let branch = -1; branch <= 1; branch += 2) {
+      ctx.beginPath();
+      for (let t = -2; t <= 2; t += 0.05) {
+        const x = branch * W*0.18 * Math.cosh(t);
+        const y = H*0.3 * Math.sinh(t);
+        const px = cx+x, py = cy+y;
+        if (px < 0 || px > W || py < 0 || py > H) continue;
+        Math.abs(t) < 0.06 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+    }
+  }
+}
+
+// ---- PTOLEMY OSCILLOSCOPE ----
+let oscAnim;
+function initOscilloscope() {
+  const canvas = document.getElementById('osc-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 80 * window.devicePixelRatio || 80;
+  const freqSlider = document.getElementById('osc-freq');
+  const ampSlider = document.getElementById('osc-amp');
+  let t = 0;
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    const freq = parseFloat(freqSlider?.value || 1);
+    const amp = parseFloat(ampSlider?.value || 0.8);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0,0,W,H);
+    // grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 1;
+    for (let i=1;i<4;i++) { ctx.beginPath(); ctx.moveTo(0,H*i/4); ctx.lineTo(W,H*i/4); ctx.stroke(); }
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(79,195,247,0.8)';
+    ctx.lineWidth = 1.5;
+    for (let x = 0; x < W; x++) {
+      const xNorm = x / W;
+      const y = H/2 - amp * (H*0.42) * Math.sin(2*Math.PI*freq*xNorm*3 + t);
+      x === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    t += 0.05;
+    oscAnim = requestAnimationFrame(draw);
+  }
+  if (oscAnim) cancelAnimationFrame(oscAnim);
+  draw();
+}
+
+// ---- ARYABHATA BINARY ----
+function initBinary() {
+  const inp = document.getElementById('bin-input');
+  const decOut = document.getElementById('bin-dec');
+  const binOut = document.getElementById('bin-bin');
+  if (!inp) return;
+  function convert() {
+    const n = parseInt(inp.value) || 0;
+    decOut.textContent = n;
+    binOut.textContent = n.toString(2) || '0';
+  }
+  inp.addEventListener('input', convert);
+  convert();
+}
+
+// ---- AL-KHWARIZMI ALGORITHM VISUALIZER ----
+function initAlgorithm() {
+  const inp = document.getElementById('alg-input');
+  const steps = document.getElementById('alg-steps');
+  if (!inp || !steps) return;
+  function runAlg() {
+    let n = parseInt(inp.value) || 0;
+    const orig = n;
+    const log = [];
+    log.push(`<div style="color:var(--accent2)">Start: x = ${n}</div>`);
+    log.push(`<div>Step 1: Is x divisible by 2? → ${n%2===0?'Yes, divide':'No, subtract 1'}</div>`);
+    let step = 1;
+    while (n > 1 && step < 12) {
+      if (n % 2 === 0) { n /= 2; log.push(`<div style="opacity:0.7">  ÷ 2 → x = ${n}</div>`); }
+      else { n--; log.push(`<div style="opacity:0.7">  − 1 → x = ${n}</div>`); }
+      step++;
+    }
+    log.push(`<div style="color:var(--gold)">Result: ${orig} reduces to 1 in ${step} steps<br><span style="font-size:9px;opacity:0.7">This is the Collatz-style isolation — Al-Khwarizmi's method of reducing unknowns step by step</span></div>`);
+    steps.innerHTML = log.join('');
+  }
+  inp.addEventListener('input', runAlg);
+  document.getElementById('alg-run')?.addEventListener('click', runAlg);
+  runAlg();
+}
+
+// ---- FIBONACCI SPIRAL ----
+function initFibonacci() {
+  const canvas = document.getElementById('fib-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 120 * window.devicePixelRatio || 120;
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(0,0,W,H);
+  // Draw golden spiral
+  const phi = (1 + Math.sqrt(5)) / 2;
+  ctx.strokeStyle = 'rgba(212,168,71,0.8)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  let r = H * 0.04, angle = 0, cx = W*0.35, cy = H*0.55;
+  for (let i = 0; i < 400; i++) {
+    const x = cx + r * Math.cos(angle);
+    const y = cy - r * Math.sin(angle);
+    i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    angle += 0.1;
+    r *= Math.pow(phi, 0.1/(2*Math.PI));
+    if (r > W*0.9) break;
+  }
+  ctx.stroke();
+  // Sequence labels
+  const fib = [1,1,2,3,5,8,13,21];
+  fib.forEach((n,i) => {
+    const a = i * 0.6;
+    const rr = H * 0.04 * Math.pow(phi, a/(2*Math.PI) * (i*0.5+1));
+    const x = cx + Math.min(rr*0.5, W*0.4) * Math.cos(a*1.2);
+    const y = cy - Math.min(rr*0.5, H*0.4) * Math.sin(a*1.2);
+    if (x < 0 || x > W || y < 0 || y > H) return;
+    ctx.fillStyle = 'rgba(212,168,71,0.6)';
+    ctx.font = `${Math.max(8,Math.min(12, 8+i))*window.devicePixelRatio}px DM Mono`;
+    ctx.fillText(n, x, y);
+  });
+}
+
+// ---- CARDANO DICE ----
+function initDice() {
+  const rollBtn = document.getElementById('dice-roll');
+  const nInput = document.getElementById('dice-n');
+  const canvas = document.getElementById('dice-canvas');
+  if (!rollBtn || !canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 100 * window.devicePixelRatio || 100;
+  let total = [0,0,0,0,0,0];
+  let totalRolls = 0;
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(0,0,W,H);
+    const barW = W/6 - 4;
+    const theoretic = 1/6;
+    total.forEach((count, i) => {
+      const pct = totalRolls > 0 ? count/totalRolls : 0;
+      const x = i * (W/6) + 2;
+      const barH = pct * H * 0.85;
+      const theorH = theoretic * H * 0.85;
+      // theoretical
+      ctx.fillStyle = 'rgba(79,195,247,0.2)';
+      ctx.fillRect(x, H - theorH, barW, theorH);
+      // observed
+      ctx.fillStyle = 'rgba(124,111,255,0.7)';
+      ctx.fillRect(x, H - barH, barW, barH);
+      // label
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = `${9*window.devicePixelRatio}px DM Mono`;
+      ctx.fillText(i+1, x + barW/2 - 4*window.devicePixelRatio, H - 2);
+    });
+  }
+  rollBtn.addEventListener('click', () => {
+    const n = parseInt(nInput?.value || 100);
+    for (let i = 0; i < n; i++) total[Math.floor(Math.random()*6)]++;
+    totalRolls += n;
+    document.getElementById('dice-total').textContent = `Total rolls: ${totalRolls}`;
+    draw();
+  });
+  draw();
+}
+
+// ---- VIÈTE EQUATION FLIP ----
+function initViete() {
+  const btn = document.getElementById('viete-flip');
+  const disp = document.getElementById('viete-disp');
+  if (!btn || !disp) return;
+  let showing = 'rhetorical';
+  const rhetorical = '"Three times a quantity, added to five, yields fourteen. What is the quantity?"';
+  const symbolic = '<em>3x + 5 = 14</em><br><span style="font-size:0.8rem;opacity:0.6">→ x = 3</span>';
+  btn.addEventListener('click', () => {
+    showing = showing === 'rhetorical' ? 'symbolic' : 'rhetorical';
+    disp.style.opacity = '0';
+    setTimeout(() => {
+      disp.innerHTML = showing === 'rhetorical' ? rhetorical : symbolic;
+      disp.style.opacity = '1';
+      btn.textContent = showing === 'rhetorical' ? 'Show Symbolic (Viète)' : 'Show Rhetorical (Pre-Viète)';
+    }, 200);
+  });
+  disp.innerHTML = rhetorical;
+  btn.textContent = 'Show Symbolic (Viète)';
+}
+
+// ---- NAPIER LOG SCALE ----
+function initLog() {
+  const slider = document.getElementById('log-slider');
+  const out = document.getElementById('log-out');
+  const anchors = document.getElementById('log-anchors');
+  if (!slider) return;
+  const examples = [
+    [0, 'Silence'],
+    [20, 'Rustling leaves'],
+    [40, 'Library'],
+    [60, 'Normal conversation'],
+    [80, 'Vacuum cleaner'],
+    [100, 'Motorcycle'],
+    [120, 'Jet engine 30m away'],
+    [140, 'Threshold of pain'],
+  ];
+  slider.addEventListener('input', () => {
+    const db = parseInt(slider.value);
+    const watts = Math.pow(10, (db-120)/10) * 1;
+    out.textContent = `${db} dB = ~${watts.toExponential(2)} W/m²`;
+    const closest = examples.reduce((a,b) => Math.abs(b[0]-db) < Math.abs(a[0]-db) ? b : a);
+    anchors.textContent = `≈ ${closest[1]}`;
+  });
+  slider.dispatchEvent(new Event('input'));
+}
+
+// ---- NEWTON AREA OPTIMIZER ----
+function initNewton() {
+  const slider = document.getElementById('newton-slider');
+  const canvas = document.getElementById('newton-canvas');
+  const out = document.getElementById('newton-area');
+  if (!slider || !canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 100 * window.devicePixelRatio || 100;
+  function draw(peak) {
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0,H*0.9); ctx.lineTo(W,H*0.9); ctx.stroke();
+    const a = -1/(peak*peak+0.01);
+    const offset = -a*peak*peak;
+    // fill
+    ctx.beginPath();
+    for (let x = 0; x <= W; x++) {
+      const xv = (x/W)*4 - 2;
+      const yv = a*xv*xv + offset;
+      const py = H*0.9 - yv*H*0.7;
+      x === 0 ? ctx.moveTo(x, Math.min(py, H*0.9)) : ctx.lineTo(x, Math.min(py, H*0.9));
+    }
+    ctx.lineTo(W, H*0.9); ctx.lineTo(0, H*0.9); ctx.closePath();
+    ctx.fillStyle = 'rgba(124,111,255,0.15)'; ctx.fill();
+    // curve
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(124,111,255,0.8)'; ctx.lineWidth = 2;
+    for (let x = 0; x <= W; x++) {
+      const xv = (x/W)*4 - 2;
+      const yv = a*xv*xv + offset;
+      const py = H*0.9 - yv*H*0.7;
+      x === 0 ? ctx.moveTo(x,py) : ctx.lineTo(x,py);
+    }
+    ctx.stroke();
+    // peak marker
+    const peakX = (peak/4+0.5)*W;
+    const peakY = H*0.9 - offset*H*0.7;
+    ctx.beginPath(); ctx.arc(peakX, peakY, 4, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(212,168,71,0.9)'; ctx.fill();
+    // area approx (trapezoidal)
+    let area = 0;
+    for (let xv = -2; xv < 2; xv += 0.01) { area += Math.max(0, a*xv*xv + offset) * 0.01; }
+    out.textContent = `Area ≈ ${area.toFixed(3)} (peak at x = ${parseFloat(peak).toFixed(2)})`;
+  }
+  slider.addEventListener('input', () => draw(parseFloat(slider.value)));
+  draw(0);
+}
+
+// ---- BERNOULLI COMPOUND INTEREST ----
+function initCompound() {
+  const principal = document.getElementById('ci-principal');
+  const rate = document.getElementById('ci-rate');
+  const years = document.getElementById('ci-years');
+  const canvas = document.getElementById('interest-canvas');
+  if (!principal || !canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 120 * window.devicePixelRatio || 120;
+  function draw() {
+    const P = parseFloat(principal.value) || 1000;
+    const r = parseFloat(rate.value) / 100 || 0.05;
+    const Y = parseInt(years.value) || 20;
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    const freqs = [{n:1,label:'Annual',color:'rgba(124,111,255,0.8)'},{n:12,label:'Monthly',color:'rgba(79,195,247,0.8)'},{n:365,label:'Daily',color:'rgba(212,168,71,0.8)'},{n:Infinity,label:'Continuous',color:'rgba(240,98,146,0.8)'}];
+    const maxVal = P * Math.exp(r*Y) * 1.05;
+    freqs.forEach(({n,label,color}) => {
+      ctx.beginPath();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      for (let t = 0; t <= Y; t += Y/100) {
+        const val = n === Infinity ? P*Math.exp(r*t) : P*Math.pow(1+r/n, n*t);
+        const x = (t/Y)*W;
+        const y = H - (val/maxVal)*H*0.9;
+        t === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    });
+    // legend
+    freqs.forEach(({label,color},i) => {
+      ctx.fillStyle = color;
+      ctx.font = `${8*window.devicePixelRatio}px DM Mono`;
+      ctx.fillText(label, W - 68*window.devicePixelRatio, (i+1)*12*window.devicePixelRatio);
+    });
+  }
+  [principal,rate,years].forEach(el => el.addEventListener('input', draw));
+  draw();
+}
+
+// ---- EULER PHASOR ----
+let phasorAnim;
+function initPhasor() {
+  const canvas = document.getElementById('phasor-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 120 * window.devicePixelRatio || 120;
+  const W = canvas.width, H = canvas.height;
+  let theta = 0;
+  const trail = [];
+  function draw() {
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(0,0,W,H);
+    const cx = W*0.28, cy = H/2, r = H*0.36;
+    // circle
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.stroke();
+    // phasor
+    const px = cx + r*Math.cos(theta);
+    const py = cy - r*Math.sin(theta);
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(px,py);
+    ctx.strokeStyle = 'rgba(124,111,255,0.9)'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2);
+    ctx.fillStyle = 'rgba(124,111,255,1)'; ctx.fill();
+    // projection line
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(W*0.6, py);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]); ctx.stroke(); ctx.setLineDash([]);
+    // sine wave trail
+    trail.push(py);
+    if (trail.length > Math.floor(W*0.4)) trail.shift();
+    ctx.beginPath();
+    trail.forEach((y, i) => {
+      const x = W*0.6 + i;
+      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle = 'rgba(79,195,247,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+    // label
+    ctx.fillStyle = 'rgba(79,195,247,0.6)';
+    ctx.font = `${8*window.devicePixelRatio}px DM Mono`;
+    ctx.fillText('e^iθ traces this circle', cx - r, cy + r + 12*window.devicePixelRatio);
+    ctx.fillText('sin(θ) is the wave', W*0.62, H*0.9);
+    theta += 0.03;
+    phasorAnim = requestAnimationFrame(draw);
+  }
+  if (phasorAnim) cancelAnimationFrame(phasorAnim);
+  draw();
+}
+
+// ---- GAUSS NORMAL DISTRIBUTION ----
+function initGauss() {
+  const canvas = document.getElementById('gauss-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 120 * window.devicePixelRatio || 120;
+  const sigmaSlider = document.getElementById('gauss-sigma');
+  const muSlider = document.getElementById('gauss-mu');
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    const sigma = parseFloat(sigmaSlider?.value || 1);
+    const mu = parseFloat(muSlider?.value || 0);
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0,H*0.85); ctx.lineTo(W,H*0.85); ctx.stroke();
+    // fill
+    ctx.beginPath();
+    for (let x = 0; x <= W; x++) {
+      const xv = (x/W)*8 - 4;
+      const yv = (1/(sigma*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*((xv-mu)/sigma)**2);
+      const py = H*0.85 - yv*H*2.2*sigma;
+      x === 0 ? ctx.moveTo(x,py) : ctx.lineTo(x,py);
+    }
+    ctx.lineTo(W,H*0.85); ctx.lineTo(0,H*0.85); ctx.closePath();
+    ctx.fillStyle = 'rgba(124,111,255,0.15)'; ctx.fill();
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(124,111,255,0.85)'; ctx.lineWidth = 2;
+    for (let x = 0; x <= W; x++) {
+      const xv = (x/W)*8 - 4;
+      const yv = (1/(sigma*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*((xv-mu)/sigma)**2);
+      const py = H*0.85 - yv*H*2.2*sigma;
+      x === 0 ? ctx.moveTo(x,py) : ctx.lineTo(x,py);
+    }
+    ctx.stroke();
+    // 1σ lines
+    const x1 = ((mu+sigma+4)/8)*W, x2 = ((mu-sigma+4)/8)*W;
+    ctx.strokeStyle = 'rgba(240,98,146,0.6)'; ctx.setLineDash([4,4]); ctx.lineWidth = 1;
+    [x1,x2].forEach(x => { ctx.beginPath(); ctx.moveTo(x,H*0.1); ctx.lineTo(x,H*0.85); ctx.stroke(); });
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(240,98,146,0.7)'; ctx.font = `${8*window.devicePixelRatio}px DM Mono`;
+    ctx.fillText('±1σ (68%)', x1+4, H*0.2);
+    document.getElementById('gauss-out').textContent = `μ=${mu.toFixed(1)}, σ=${sigma.toFixed(1)} — 68% of data within 1σ, 95% within 2σ`;
+  }
+  [sigmaSlider,muSlider].forEach(s => s?.addEventListener('input', draw));
+  draw();
+}
+
+// ---- FOURIER WAVE SYNTHESIS ----
+let fourierAnim;
+function initFourier() {
+  const canvas = document.getElementById('fourier-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 120 * window.devicePixelRatio || 120;
+  const harmonicSlider = document.getElementById('fourier-harmonics');
+  let t = 0;
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    const n = parseInt(harmonicSlider?.value || 1);
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle = 'rgba(79,195,247,0.9)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let x = 0; x < W; x++) {
+      const xNorm = (x/W)*Math.PI*4 + t;
+      let y = 0;
+      for (let k = 1; k <= n; k += 2) y += (4/(Math.PI*k))*Math.sin(k*xNorm);
+      const py = H/2 - y*(H*0.38);
+      x === 0 ? ctx.moveTo(x,py) : ctx.lineTo(x,py);
+    }
+    ctx.stroke();
+    // ideal square wave ghost
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x < W; x++) {
+      const xNorm = (x/W)*Math.PI*4 + t;
+      const y = Math.sign(Math.sin(xNorm));
+      const py = H/2 - y*(H*0.38);
+      x === 0 ? ctx.moveTo(x,py) : ctx.lineTo(x,py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(79,195,247,0.6)'; ctx.font = `${8*window.devicePixelRatio}px DM Mono`;
+    ctx.fillText(`${n} harmonic${n>1?'s':''} — ${n>=19?'near-perfect square wave':'add more to approach square'}`, 8, H-8*window.devicePixelRatio);
+    t += 0.025;
+    fourierAnim = requestAnimationFrame(draw);
+  }
+  if (fourierAnim) cancelAnimationFrame(fourierAnim);
+  draw();
+}
+
+// ---- BOOLE BOOLEAN CALCULATOR ----
+function initBooleanCalc() {
+  const inp = document.getElementById('bool-input');
+  const out = document.getElementById('bool-out');
+  if (!inp) return;
+  function evaluate() {
+    const expr = inp.value.trim()
+      .replace(/\bAND\b/gi,'&&').replace(/\bOR\b/gi,'||').replace(/\bNOT\b/gi,'!')
+      .replace(/\bTRUE\b/gi,'true').replace(/\bFALSE\b/gi,'false');
+    try {
+      const result = Function('"use strict";return (' + expr + ')')();
+      out.innerHTML = `<span style="color:${result?'var(--accent)':'var(--accent3)'}">${result ? '✓ TRUE' : '✗ FALSE'}</span><br><span style="opacity:0.5;font-size:9px">Evaluated: ${inp.value}</span>`;
+    } catch(e) {
+      out.innerHTML = `<span style="color:var(--text-dim)">Try: TRUE AND FALSE, NOT TRUE, (TRUE OR FALSE) AND TRUE</span>`;
+    }
+  }
+  inp.addEventListener('input', evaluate);
+  evaluate();
+}
+
+// ---- CANTOR INFINITY VISUALIZER ----
+function initCantor() {
+  const canvas = document.getElementById('cantor-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300;
+  canvas.height = 120 * window.devicePixelRatio || 120;
+  const W = canvas.width, H = canvas.height;
+  function drawCantor(x, y, len, depth) {
+    if (depth === 0 || len < 1) return;
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+len,y); ctx.stroke();
+    drawCantor(x, y+H*0.14, len/3, depth-1);
+    drawCantor(x+len*2/3, y+H*0.14, len/3, depth-1);
+  }
+  ctx.clearRect(0,0,W,H);
+  const colors = ['rgba(124,111,255,0.9)','rgba(79,195,247,0.8)','rgba(212,168,71,0.7)','rgba(240,98,146,0.6)','rgba(124,111,255,0.4)','rgba(79,195,247,0.3)'];
+  for (let d = 1; d <= 6; d++) {
+    ctx.strokeStyle = colors[d-1]; ctx.lineWidth = Math.max(1, (7-d)*window.devicePixelRatio*0.6);
+    drawCantor(W*0.05, H*0.08 + (d-1)*H*0.14, W*0.9, d);
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = `${8*window.devicePixelRatio}px DM Mono`;
+  ctx.fillText('Each row removes middle thirds → infinite points remain, measure zero', W*0.05, H*0.97);
+}
+
+// ---- TURING MACHINE SIMULATOR ----
+function initTuring() {
+  const tape = document.getElementById('turing-tape');
+  const stateEl = document.getElementById('turing-state');
+  const runBtn = document.getElementById('turing-run');
+  const resetBtn = document.getElementById('turing-reset');
+  if (!tape) return;
+  // Simple unary addition: 111+11 → 11111
+  let cells = ['1','1','1','+','1','1','B','B','B','B','B','B'];
+  let head = 0, state = 'q0', running = false, interval;
+  // Rules: replace + with 1, erase last 1
+  const rules = {
+    'q0_1': {write:'1', move:1, next:'q0'},
+    'q0_+': {write:'1', move:1, next:'q1'},
+    'q1_1': {write:'1', move:1, next:'q1'},
+    'q1_B': {write:'B', move:-1, next:'q2'},
+    'q2_1': {write:'B', move:-1, next:'q3'},
+    'q3_1': {write:'1', move:-1, next:'q3'},
+    'q3_B': {write:'B', move:1, next:'halt'},
+  };
+  function render() {
+    tape.innerHTML = cells.map((c,i) => `<span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border:1px solid ${i===head?'var(--accent)':'var(--border)'};background:${i===head?'rgba(124,111,255,0.2)':'transparent'};border-radius:3px;font-family:DM Mono,monospace;font-size:11px;color:${c==='B'?'var(--text-dim)':'var(--text)'};">${c==='B'?'_':c}</span>`).join('');
+    stateEl.textContent = `State: ${state}`;
+  }
+  function step() {
+    if (state === 'halt') { clearInterval(interval); running = false; runBtn.textContent = 'Run'; return; }
+    const key = `${state}_${cells[head]||'B'}`;
+    const rule = rules[key];
+    if (!rule) { state='halt'; render(); clearInterval(interval); running=false; runBtn.textContent='Run'; return; }
+    cells[head] = rule.write;
+    head += rule.move;
+    if (head < 0) head = 0;
+    if (head >= cells.length) cells.push('B');
+    state = rule.next;
+    render();
+  }
+  resetBtn?.addEventListener('click', () => {
+    clearInterval(interval); running=false; runBtn.textContent='Run';
+    cells=['1','1','1','+','1','1','B','B','B','B','B','B']; head=0; state='q0'; render();
+  });
+  runBtn?.addEventListener('click', () => {
+    if (running) { clearInterval(interval); running=false; runBtn.textContent='Run'; }
+    else { running=true; runBtn.textContent='Pause'; interval=setInterval(step,200); }
+  });
+  render();
+}
+
+// ---- SHANNON INFORMATION ENTROPY ----
+function initShannon() {
+  const inp = document.getElementById('shannon-input');
+  const out = document.getElementById('shannon-out');
+  const canvas = document.getElementById('shannon-canvas');
+  if (!inp) return;
+  const ctx = canvas?.getContext('2d');
+  if (canvas) { canvas.width = canvas.offsetWidth * window.devicePixelRatio || 300; canvas.height = 60 * window.devicePixelRatio || 60; }
+  function calc() {
+    const text = inp.value || 'Hello';
+    const freq = {};
+    for (const c of text) freq[c] = (freq[c]||0)+1;
+    const total = text.length;
+    let entropy = 0;
+    Object.values(freq).forEach(f => { const p=f/total; entropy -= p*Math.log2(p); });
+    const bits = Math.ceil(entropy * total);
+    out.innerHTML = `Entropy: <span style="color:var(--accent)">${entropy.toFixed(3)} bits/char</span> · Total: ~${bits} bits to encode "${text.length} chars"<br><span style="font-size:9px;opacity:0.6">Lower entropy = more predictable = more compressible. "aaaa" ≈ 0 bits. Random text ≈ high bits.</span>`;
+    if (canvas) {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0,0,W,H);
+      const entries = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,12);
+      const maxF = entries[0]?.[1]||1;
+      entries.forEach(([c,f],i) => {
+        const x = i*(W/12); const barH = (f/maxF)*H*0.7;
+        ctx.fillStyle = `hsl(${240+i*20},70%,65%)`; ctx.fillRect(x,H-barH,W/13,barH);
+        ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font=`${7*window.devicePixelRatio}px DM Mono`;
+        ctx.fillText(c==' '?'_':c, x+2, H-2);
+      });
+    }
+  }
+  inp.addEventListener('input', calc);
+  calc();
+}
+
+// ======= PROFILE DATA =======
+const PROFILES = {
+  babylonians: {
+    key: 'babylonians', emoji: '🏛', name: 'The Babylonians',
+    dates: 'c. 2000–500 BCE',
+    headline: "We invented the 60-second minute, the 60-minute hour, and the coordinate grid. You're welcome.",
+    location: "Mesopotamia, Iraq (between the Tigris and Euphrates, where civilization itself was invented)",
+    bigIdea: "The Babylonians worked in base-60 (sexagesimal) instead of base-10. They also knew specific integer triangles — like 3-4-5 — where the Pythagorean relationship held, over 1,000 years before Pythagoras was born. Their number system wasn't just convenient — it had 60 divisors, making fractions much easier.",
+    funFact: "They had no zero and no decimal point — but their astronomers were so accurate that their eclipse predictions were off by less than an hour over centuries.",
+    connections: ['Euclid', 'Ptolemy', 'Aryabhata'],
+    vibe: ['Systematic', 'Astronomical', 'Foundational'],
+    difficulty: 2,
+    modernUse: "GPS satellites use base-60 time and angle measurement. Every clock, every map with degrees/minutes/seconds — that's Babylonian math still running in your pocket.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px">Your location, two ways:</div>
+      <button class="sim-btn" id="bab-geo-btn">📍 Get My Coordinates</button>
+      <div id="bab-geo-out" class="output-display" style="margin-top:8px;display:none">Fetching your location…</div>`
+  },
+  euclid: {
+    key: 'euclid', emoji: '📐', name: 'Euclid',
+    dates: 'c. 300 BCE (exact dates unknown)',
+    headline: "I wrote the most successful textbook in history. It was used for 2,000 years. Your geometry class is still my fault.",
+    location: "Alexandria, Egypt (the intellectual capital of the ancient world — home to the greatest library ever built)",
+    bigIdea: "Euclid's <em>Elements</em> established that all of geometry — and by extension, all of logic — could be built from just five axioms. Every theorem follows inevitably from those starting points. This was the first rigorous deductive system in history.",
+    funFact: "We know almost nothing about Euclid the person. No birth year, no hometown for certain, no physical description. He's basically just a name attached to the most influential math book ever written.",
+    connections: ['Archimedes', 'Apollonius', 'Ptolemy'],
+    vibe: ['Rigorous', 'Systematic', 'Mysterious'],
+    difficulty: 2,
+    modernUse: "Euclid's method of chaining if/then statements from axioms IS computer logic. Every Boolean operation in every circuit is Euclidean proof. Your phone runs on his method.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px">Toggle inputs — watch Euclidean logic work in real time:</div>
+      <div class="gate-display">
+        <div class="gate-io">
+          <div class="bit-toggle"><button class="bit-btn" id="bit-a" aria-label="Toggle input A"></button><span>A = <span id="bit-a-label">0</span></span></div>
+          <div class="bit-toggle"><button class="bit-btn" id="bit-b" aria-label="Toggle input B"></button><span>B = <span id="bit-b-label">0</span></span></div>
+        </div>
+        <div class="gate-symbol">→<br>→</div>
+        <div class="gate-results">
+          <div class="gate-result"><div class="result-indicator" id="gate-and">0</div><span>A AND B</span></div>
+          <div class="gate-result"><div class="result-indicator" id="gate-or">0</div><span>A OR B</span></div>
+          <div class="gate-result"><div class="result-indicator" id="gate-not">1</div><span>NOT A</span></div>
+        </div>
+      </div>
+      <div style="font-size:8px;color:var(--text-dim);margin-top:8px;font-family:'DM Mono',monospace">← The foundation of every computer chip since 1950</div>`
+  },
+  archimedes: {
+    key: 'archimedes', emoji: '⭕', name: 'Archimedes',
+    dates: 'c. 287–212 BCE',
+    headline: "I approximated π using a 96-sided polygon. I also invented war machines, the water screw, and the idea of buoyancy. Not a quiet life.",
+    location: "Syracuse, Sicily (a wealthy Greek colony that kept getting invaded — ultimately fatally for Archimedes)",
+    bigIdea: "By inscribing and circumscribing polygons around a circle and increasing the number of sides, Archimedes proved that π is between 3 10/71 and 3 1/7. This polygon-approximation method is the conceptual ancestor of calculus limits.",
+    funFact: "Archimedes was killed by a Roman soldier while working on a geometry problem in the sand. His last words were reportedly 'Do not disturb my circles.'",
+    connections: ['Euclid', 'Apollonius', 'Newton'],
+    vibe: ['Brilliant', 'Obsessive', 'Practical'],
+    difficulty: 3,
+    modernUse: "Every circular calculation in engineering uses π. MRI machines, cylindrical fuel tanks, tire sizing. NASA uses 39 decimal places of π — enough to compute the circumference of the observable universe to within the width of a hydrogen atom.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:10px">More sides → closer to π:</div>
+      <canvas id="arch-canvas" style="height:120px;width:100%;background:rgba(0,0,0,0.4);border-radius:8px"></canvas>
+      <div class="range-container" style="margin-top:8px">
+        <div class="range-label"><span>3 sides</span><span>96 sides</span></div>
+        <input type="range" id="arch-sides" min="3" max="96" value="6" step="1">
+      </div>
+      <div id="arch-pi" class="output-display" style="margin-top:8px">Drag the slider</div>`
+  },
+  apollonius: {
+    key: 'apollonius', emoji: '🪐', name: 'Apollonius of Perga',
+    dates: 'c. 262–190 BCE',
+    headline: "I named the parabola, the ellipse, and the hyperbola. Every satellite dish, every planetary orbit, every GPS fix — that's my work.",
+    location: "Perga, Turkey and Alexandria, Egypt (the ancient brain drain — smart people went to Alexandria)",
+    bigIdea: "Apollonius showed that all three conic sections — parabola, ellipse, hyperbola — arise from slicing a cone at different angles. They're not separate shapes; they're one unified family. He derived their geometric properties with stunning precision, 1,800 years before anyone understood why they mattered so much.",
+    funFact: "Apollonius was so good that he earned the nickname 'The Great Geometer' in his own lifetime. He also did early work on the epicycles used to model planetary motion — the precursor to orbital mechanics.",
+    connections: ['Euclid', 'Ptolemy', 'Newton', 'Descartes'],
+    vibe: ['Geometric', 'Prophetic', 'Ahead of his time'],
+    difficulty: 4,
+    modernUse: "Parabolas focus satellite dishes. Ellipses ARE planetary orbits (Kepler proved it). Hyperbolas power GPS — signals from multiple towers intersect on a hyperbola to pinpoint your location.",
+    interactiveHTML: `
+      <div class="toggle-row" style="margin-bottom:10px">
+        <button class="toggle-opt conic-btn active" id="conic-para">Parabola</button>
+        <button class="toggle-opt conic-btn" id="conic-ellipse">Ellipse</button>
+        <button class="toggle-opt conic-btn" id="conic-hyperbola">Hyperbola</button>
+      </div>
+      <canvas id="conic-canvas" style="height:120px;width:100%;border-radius:8px"></canvas>
+      <div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted)">
+        <div id="conic-desc-para">🛰 Parabola: satellite dish cross-section. All signals reflect to a single focal point (the red dot).</div>
+        <div id="conic-desc-ellipse" style="display:none">🪐 Ellipse: every planet orbits the Sun at one of the two foci (red dots). Kepler proved this in 1609.</div>
+        <div id="conic-desc-hyperbola" style="display:none">📡 Hyperbola: GPS towers — your phone finds where two hyperbolas intersect to locate you.</div>
+      </div>`
+  },
+  ptolemy: {
+    key: 'ptolemy', emoji: '🌊', name: 'Claudius Ptolemy',
+    dates: 'c. 100–170 CE',
+    headline: "I was wrong about the Earth being the center of the universe. But my trig tables were so accurate they were used for 1,400 years anyway.",
+    location: "Alexandria, Egypt (still the world's center of learning, even under Roman rule)",
+    bigIdea: "Ptolemy compiled and extended Greek trig into a complete system, producing detailed chord tables equivalent to our sine and cosine. His model of the universe was geocentric — but the math he built to make it work was genuinely brilliant, and trigonometry itself was the lasting gift.",
+    funFact: "Ptolemy's geocentric model was so mathematically precise that it predicted planetary positions accurately for centuries. It took Copernicus, Kepler, and Galileo — working across 150 years — to finally dethrone it.",
+    connections: ['Euclid', 'Archimedes', 'Aryabhata'],
+    vibe: ['Meticulous', 'Systematic', 'Stubbornly wrong'],
+    difficulty: 3,
+    modernUse: "Sine and cosine describe every oscillating system: sound waves, AC electricity, light waves, tides, pendulums. Your speaker converts a mathematical sine wave into sound pressure.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Adjust frequency and amplitude — this is literally how your speaker works:</div>
+      <canvas id="osc-canvas" style="height:80px;width:100%"></canvas>
+      <div class="range-container" style="margin-top:8px">
+        <div class="range-label"><span>Frequency</span><span id="freq-val">1x</span></div>
+        <input type="range" id="osc-freq" min="0.5" max="4" step="0.1" value="1" oninput="document.getElementById('freq-val').textContent=parseFloat(this.value).toFixed(1)+'x'">
+      </div>
+      <div class="range-container" style="margin-top:6px">
+        <div class="range-label"><span>Amplitude</span><span id="amp-val">80%</span></div>
+        <input type="range" id="osc-amp" min="0.1" max="1" step="0.05" value="0.8" oninput="document.getElementById('amp-val').textContent=Math.round(parseFloat(this.value)*100)+'%'">
+      </div>`
+  },
+  aryabhata: {
+    key: 'aryabhata', emoji: '🔢', name: 'Aryabhata',
+    dates: 'c. 476–550 CE',
+    headline: "I formalized zero. Not as a placeholder — as a number. That made binary possible. That made your phone possible.",
+    location: "Patna, India (Kusumapura — one of the greatest centers of learning in the ancient world)",
+    bigIdea: "Aryabhata didn't invent zero, but he was among the first to treat it as a number with mathematical properties, not just a gap. He also produced the first systematic sine table in history, calculated π to four decimal places, and proposed that the Earth rotates — not the stars.",
+    funFact: "He proposed a heliocentric-ish model — Earth rotates on its axis — in 499 CE. The idea was largely ignored for 1,000 years. He was right.",
+    connections: ['Babylonians', 'Ptolemy', 'Al-Khwarizmi'],
+    vibe: ['Ahead of his time', 'Elegant', 'Underrated'],
+    difficulty: 2,
+    modernUse: "Zero as a true mathematical value is what makes binary code work. The 0 in binary isn't a placeholder — it's a number that means 'off'. Without that concept, digital computing doesn't exist.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Type any number — watch Aryabhata's zero power your device:</div>
+      <input type="number" class="num-input" id="bin-input" value="42" min="0" max="9999" placeholder="Enter a number">
+      <div class="binary-result" style="margin-top:8px">
+        <div class="binary-box"><div class="binary-box-label">Decimal</div><div class="binary-box-val" id="bin-dec">42</div></div>
+        <div class="binary-box"><div class="binary-box-label">Binary (what your device sees)</div><div class="binary-box-val" id="bin-bin">101010</div></div>
+      </div>
+      <div style="font-size:8px;color:var(--text-dim);margin-top:6px;font-family:'DM Mono',monospace">Without zero as a true number, those 0 bits have no meaning → no binary → no computers</div>`
+  },
+  alkhwarizmi: {
+    key: 'alkhwarizmi', emoji: '∿', name: 'Al-Khwarizmi',
+    dates: 'c. 780–850 CE',
+    headline: "The word 'algorithm' comes directly from my name. Every search result, every recommendation, every social media feed — that's my intellectual legacy.",
+    location: "Baghdad, Iraq (the House of Wisdom — the greatest library and research center in the medieval world, c. 830 CE)",
+    bigIdea: "Al-Khwarizmi wrote 'Al-Kitab al-mukhtasar fi hisab al-jabr wal-muqabala' — from which we get the word 'algebra.' He formalized the idea that equations could be solved by systematic step-by-step methods (algorithms), and introduced Hindu-Arabic numerals to the Islamic world, and through it, to Europe.",
+    funFact: "The word 'algebra' comes from 'al-jabr' in his book title, meaning 'the reunion of broken parts.' He was essentially describing what algebra does: take a broken equation and put it back together.",
+    connections: ['Aryabhata', 'Fibonacci', 'Viète'],
+    vibe: ['Methodical', 'Visionary', 'Deeply practical'],
+    difficulty: 2,
+    modernUse: "An algorithm is a finite, step-by-step procedure for solving a problem. That's exactly what Al-Khwarizmi formalized. Google's PageRank, Netflix recommendations, Spotify shuffle — all algorithms in his tradition.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Watch Al-Khwarizmi's method: reduce a number step by step:</div>
+      <input type="number" class="num-input" id="alg-input" value="24" min="2" max="999">
+      <button class="sim-btn" id="alg-run" style="width:100%;margin-top:6px">Run Algorithm</button>
+      <div id="alg-steps" class="output-display" style="margin-top:8px;font-size:10px;line-height:1.8;min-height:80px"></div>`
+  },
+  fibonacci: {
+    key: 'fibonacci', emoji: '🐚', name: 'Leonardo Fibonacci',
+    dates: 'c. 1170–1250 CE',
+    headline: "I brought Arabic numerals to Europe. Without me, you'd still be doing long division with Roman numerals. You're welcome.",
+    location: "Pisa, Italy and Béjaïa, Algeria (he grew up in North Africa where he learned Arabic math — then brought it home to Europe)",
+    bigIdea: "Fibonacci's <em>Liber Abaci</em> (1202) introduced the Hindu-Arabic numeral system — the digits 0-9 we still use — to European commerce and mathematics. The Fibonacci sequence appears as a solved rabbit problem in the book, almost as a footnote. It became one of the most famous sequences in all of mathematics.",
+    funFact: "'Fibonacci' isn't even his real name. He was born Leonardo of Pisa. 'Fibonacci' is a nickname — possibly short for 'filius Bonacci' (son of Bonacci). He'd have been baffled by the Fibonacci spiral on Instagram.",
+    connections: ['Al-Khwarizmi', 'Cardano', 'Viète'],
+    vibe: ['Curious traveler', 'Bridge builder', 'Accidentally iconic'],
+    difficulty: 1,
+    modernUse: "Fibonacci ratios appear in flower petal counts, pinecone spirals, shell proportions, and plant growth. In human design: used in UI proportions, camera composition guides, and technical stock analysis (Fibonacci retracement levels).",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">The golden spiral — found in nautilus shells, sunflowers, and Renaissance paintings:</div>
+      <canvas id="fib-canvas" style="height:120px;width:100%;border-radius:8px"></canvas>
+      <div style="font-size:8px;color:var(--text-dim);margin-top:6px;font-family:'DM Mono',monospace">φ = (1+√5)/2 ≈ 1.618... — each arc is φ times larger than the previous</div>`
+  },
+  cardano: {
+    key: 'cardano', emoji: '🎲', name: 'Gerolamo Cardano',
+    dates: '1501–1576 CE (died age ~74)',
+    headline: "I gambled obsessively and wrote one of the first books on probability to get better at it. It worked — eventually.",
+    location: "Milan, Italy (during the Renaissance, when Italian city-states were the intellectual center of Europe)",
+    bigIdea: "Cardano solved cubic equations (first solutions in history) and wrote <em>Liber de Ludo Aleae</em> — the first systematic treatment of probability. He was also the first to work with imaginary numbers, though he called them 'mentally tortured' quantities.",
+    funFact: "Cardano published another mathematician's cubic solution (Tartaglia's) after swearing an oath of secrecy. Tartaglia was furious. The resulting public mathematical duel is one of the most dramatic episodes in math history.",
+    connections: ['Fibonacci', 'Viète', 'Newton'],
+    vibe: ['Compulsive', 'Brilliant', 'Ethically flexible'],
+    difficulty: 4,
+    modernUse: "Probability theory powers insurance pricing, weather forecasting, medical trial design, and every financial risk model. When your insurance company quotes you a price, they're running Cardano's math.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Roll dice — watch the law of large numbers converge (purple = observed, blue = theoretical 1/6):</div>
+      <canvas id="dice-canvas" style="height:100px;width:100%;border-radius:8px"></canvas>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <input type="number" class="num-input" id="dice-n" value="100" min="10" max="10000" style="width:100px">
+        <button class="sim-btn" id="dice-roll" style="flex:1">Roll!</button>
+      </div>
+      <div id="dice-total" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:4px">Total rolls: 0</div>`
+  },
+  viete: {
+    key: 'viete', emoji: '𝑥', name: 'François Viète',
+    dates: '1540–1603 CE (died age 63)',
+    headline: "Before me, every equation was written in a paragraph. I introduced letters for unknowns. That's why you write y = mx + b instead of an essay.",
+    location: "Paris, France (the French court — Viète worked as a royal codebreaker, which is how he ended up thinking about abstract symbols)",
+    bigIdea: "Viète was the first to systematically use letters to represent both known and unknown quantities in equations, allowing algebra to become general — applicable to any problem, not just specific numbers. Before him, algebra was procedural and verbal. After him, it was symbolic and universal.",
+    funFact: "Viète cracked an intercepted Spanish diplomatic cipher during a war with France. The Spanish were so outraged they accused France of using black magic. No one suspected it was just a guy who was very good at abstract pattern recognition.",
+    connections: ['Al-Khwarizmi', 'Fibonacci', 'Descartes', 'Newton'],
+    vibe: ['Systematic', 'Abstracting', 'Revolutionary in quiet ways'],
+    difficulty: 2,
+    modernUse: "Every variable in every program — x, y, n, i, str, val — is Viète's symbolic algebra. The entire language of mathematics as we write it today is his invention.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">The same equation, two eras apart:</div>
+      <div class="equation-display" id="viete-disp"></div>
+      <button class="sim-btn" id="viete-flip" style="width:100%;margin-top:8px">Show Symbolic (Viète)</button>`
+  },
+  napier: {
+    key: 'napier', emoji: '📊', name: 'John Napier',
+    dates: '1550–1617 CE (died age ~67)',
+    headline: "I invented logarithms so astronomers wouldn't have to multiply giant numbers by hand. It took them 20 years to notice it worked.",
+    location: "Edinburgh, Scotland (at his castle, Merchiston Tower — he spent decades working alone on this problem)",
+    bigIdea: "Logarithms convert multiplication into addition — making calculations with enormous numbers manageable without computers. Napier spent 20 years computing the first log table by hand. The principle: log(a × b) = log(a) + log(b). Multiplying huge numbers becomes adding their logs.",
+    funFact: "Napier was also an amateur theologian who wrote a book about the Book of Revelation. He believed the Pope was the Antichrist and tried to calculate the apocalypse from scripture. The logarithms were a side project.",
+    connections: ['Viète', 'Descartes', 'Newton', 'Euler'],
+    vibe: ['Patient', 'Eccentric', 'Quietly indispensable'],
+    difficulty: 3,
+    modernUse: "Richter scale (earthquakes), decibels (sound), pH (acidity), stellar magnitude — all logarithmic. They express enormous ranges on human scales. A difference of 1 on the Richter scale = 10x more energy.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Drag across a logarithmic sound scale — equal visual distance, vastly different reality:</div>
+      <div class="range-container">
+        <div class="range-label"><span>0 dB</span><span>140 dB</span></div>
+        <input type="range" id="log-slider" min="0" max="140" value="60" step="1">
+      </div>
+      <div class="output-display" style="margin-top:6px" id="log-out"></div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent2);margin-top:4px" id="log-anchors"></div>`
+  },
+  descartes: {
+    key: 'descartes', emoji: '🗺', name: 'René Descartes',
+    dates: '1596–1650 CE (died age 53)',
+    headline: "I invented the coordinate plane, allegedly because I watched a fly on my ceiling and wondered how to describe its exact position. I slept until noon daily.",
+    location: "Amsterdam, Netherlands (he moved constantly across Europe to avoid controversy — over 14 residences in 20 years)",
+    bigIdea: "The Cartesian coordinate system — x and y axes, graphing equations as curves — unified geometry and algebra for the first time. A circle is now both a shape AND an equation. This made calculus possible, since Newton needed coordinates to express rates of change.",
+    funFact: "Descartes credited his best thinking to mornings spent lying in bed, thinking. He reportedly died because Queen Christina of Sweden insisted on philosophy lessons at 5am in a freezing palace. He caught pneumonia within weeks.",
+    connections: ['Viète', 'Napier', 'Newton', 'Leibniz'],
+    vibe: ['Meditative', 'Systematic', 'Reluctant to publish'],
+    difficulty: 2,
+    modernUse: "The coordinate plane is the backbone of GPS, mapping software, computer graphics, robotics, and data visualization. Any time a position is two numbers — that's Descartes.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Descartes invented the system that can locate you:</div>
+      <button class="sim-btn" id="desc-geo-btn">📍 Find My Cartesian Coordinates</button>
+      <div id="desc-geo-out" class="output-display" style="margin-top:8px;display:none">Fetching your location…</div>`
+  },
+  newton: {
+    key: 'newton', emoji: '🍎', name: 'Isaac Newton',
+    dates: '1643–1727 CE (died age 84)',
+    headline: "I invented calculus, proved gravity works the same on Earth and in space, and then had a complete mental breakdown and mostly stopped doing math at age 50.",
+    location: "Cambridge and London, England (Trinity College Cambridge, then the Royal Mint — yes, he ran the Mint)",
+    bigIdea: "Newton developed calculus (simultaneously and independently with Leibniz) to solve the problem of rates of change — how fast something is moving at any instant. He used it to derive the laws of planetary motion, showing Kepler's ellipses were mathematically inevitable consequences of gravity.",
+    funFact: "Newton spent more time on alchemy and biblical interpretation than on physics. He wrote over a million words on alchemy. The Principia — which changed civilization — was written in 18 months and he reportedly forgot to eat while working on it.",
+    connections: ['Archimedes', 'Descartes', 'Leibniz', 'Bernoulli', 'Euler'],
+    vibe: ['Obsessive', 'Reclusive', 'Transcendent'],
+    difficulty: 5,
+    modernUse: "Calculus is used to calculate spacecraft trajectories, model disease spread, optimize delivery routes, train ML models, and create every smooth digital animation. Any continuous change requires calculus.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Drag the peak to maximize area — this is the intuition behind calculus optimization:</div>
+      <canvas id="newton-canvas" style="height:100px;width:100%;border-radius:8px"></canvas>
+      <div class="range-container" style="margin-top:8px">
+        <div class="range-label"><span>←</span><span>Peak position</span><span>→</span></div>
+        <input type="range" id="newton-slider" min="-1.8" max="1.8" step="0.05" value="0">
+      </div>
+      <div id="newton-area" class="output-display" style="margin-top:6px;font-size:10px"></div>`
+  },
+  bernoulli: {
+    key: 'bernoulli', emoji: '🧮', name: 'Jacob Bernoulli',
+    dates: '1655–1705 CE (died age 50)',
+    headline: "I discovered e while studying compound interest. It turned out to describe everything that grows continuously — money, bacteria, radioactive decay, charging capacitors.",
+    location: "Basel, Switzerland (the Bernoulli family produced eight prominent mathematicians across three generations — it was a math dynasty)",
+    bigIdea: "Bernoulli showed that as compounding frequency increases (annually → monthly → daily → continuously), the growth converges to a specific limit — the number <em>e</em> ≈ 2.71828. He also made foundational contributions to probability and the law of large numbers.",
+    funFact: "Jacob and his brother Johann Bernoulli had one of history's most bitter mathematical rivalries — they publicly insulted each other's work for years. Johann eventually admitted Jacob was probably better. Probably.",
+    connections: ['Newton', 'Leibniz', 'Euler'],
+    vibe: ['Meticulous', 'Competitive', 'Foundational'],
+    difficulty: 4,
+    modernUse: "e governs every continuously compounding system: bank interest, population growth, radioactive decay, coffee cooling, capacitor charging. If it grows or decays smoothly, e is in the equation.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">See how e emerges as compounding frequency increases:</div>
+      <canvas id="interest-canvas" style="height:120px;width:100%;border-radius:8px"></canvas>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+        <div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim)">Principal ($)</div><input type="number" class="num-input" id="ci-principal" value="1000" min="100" max="1000000"></div>
+        <div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim)">Rate (%)</div><input type="number" class="num-input" id="ci-rate" value="7" min="1" max="30"></div>
+        <div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim)">Years</div><input type="number" class="num-input" id="ci-years" value="20" min="1" max="50"></div>
+      </div>`
+  },
+  euler: {
+    key: 'euler', emoji: '𝑒', name: 'Leonhard Euler',
+    dates: '1707–1783 CE (died age 76)',
+    headline: "I wrote more math than anyone in history. Yes, even after I went completely blind. I kept going for 17 more years by dictating to my son.",
+    location: "St. Petersburg, Russia and Berlin, Prussia (followed the money and the intellectual freedom — both were in royal academies)",
+    bigIdea: "Euler formalized function notation f(x), introduced e and i, proved Euler's identity (e^iπ + 1 = 0 — connecting five fundamental constants), solved the Basel problem, founded graph theory, and produced ~886 books and papers. He was still publishing after going blind.",
+    funFact: "Euler lost sight in his right eye at 31, and his left eye at 59. His output actually INCREASED after going blind — freed from distractions, he could hold entire complex proofs in his head. He died mid-dictation, during a math lesson.",
+    connections: ['Newton', 'Bernoulli', 'Leibniz', 'Descartes'],
+    vibe: ['Unstoppable', 'Joyful', 'Superhuman'],
+    difficulty: 5,
+    modernUse: "f(x) notation is the language of all programming — every function, method, and API call. Euler's identity appears in quantum mechanics, electrical engineering, and audio signal processing. e^iθ traces a circle in the complex plane — the foundation of AC circuit analysis.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">e^iθ traces a perfect circle — this is how AC circuits and audio signals work:</div>
+      <canvas id="phasor-canvas" style="height:120px;width:100%;border-radius:8px"></canvas>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);margin-top:6px">The rotating arrow (phasor) → projected sine wave → your speaker's signal</div>`
+  },
+  gauss: {
+    key: 'gauss', emoji: '🔔', name: 'Carl Friedrich Gauss',
+    dates: '1777–1855 CE (died age 77)',
+    headline: "I summed 1 to 100 in seconds at age 9 by spotting the pattern. My teacher never forgave me.",
+    location: "Göttingen, Germany (the University of Göttingen — he spent most of his career here, rarely leaving)",
+    bigIdea: "Gauss proved the Fundamental Theorem of Algebra, developed the method of least squares (the foundation of all statistical regression), invented modular arithmetic, discovered the normal distribution, and made foundational contributions to number theory, magnetism, and differential geometry. He published only what he considered complete — his unpublished notebooks contained discoveries others wouldn't find for decades.",
+    funFact: "When asked to check a student's work, Gauss could often say 'the answer is wrong' before reading the solution — he'd already computed it in his head. He reportedly kept a diary of mathematical discoveries he hadn't bothered to publish yet.",
+    connections: ['Euler', 'Fourier', 'Riemann', 'Einstein'],
+    vibe: ['Perfectionist', 'Secretive', 'Transcendent'],
+    difficulty: 4,
+    modernUse: "The normal distribution (bell curve) underlies all statistical inference — polls, medical trials, quality control, finance, machine learning. If you've ever seen error bars on a graph, that's Gauss.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Adjust the bell curve — this shape governs polls, test scores, manufacturing tolerances, and ML error rates:</div>
+      <canvas id="gauss-canvas" style="height:120px;width:100%;border-radius:8px"></canvas>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <div><div class="range-label"><span>Mean (μ): center</span></div><input type="range" id="gauss-mu" min="-2" max="2" step="0.1" value="0"></div>
+        <div><div class="range-label"><span>Std Dev (σ): spread</span></div><input type="range" id="gauss-sigma" min="0.3" max="2" step="0.1" value="1"></div>
+      </div>
+      <div id="gauss-out" class="output-display" style="margin-top:8px;font-size:10px"></div>`
+  },
+  fourier: {
+    key: 'fourier', emoji: '〰', name: 'Joseph Fourier',
+    dates: '1768–1830 CE (died age 62)',
+    headline: "Any wave — sound, light, heat, Wi-Fi — is secretly just a sum of sine waves. I proved it. Now it's everywhere.",
+    location: "Paris, France and Egypt (he accompanied Napoleon to Egypt — that's where he got obsessed with heat flow, the problem that led to the Fourier transform)",
+    bigIdea: "Fourier showed that any periodic function — no matter how complex — can be decomposed into a sum of simple sine and cosine waves. This seems abstract until you realize that sound, light, heat, radio signals, and images are all periodic functions. The Fourier transform turns any signal into its frequency components.",
+    funFact: "Fourier was so convinced heat was healthy that he kept his house unbearably hot and wore heavy coats indoors, even in summer. He died when he tripped and fell down stairs — possibly because his legs were so wrapped in bandages from his heat obsession.",
+    connections: ['Newton', 'Gauss', 'Euler'],
+    vibe: ['Obsessive', 'Practical visionary', 'Napoleon\'s mathematician'],
+    difficulty: 4,
+    modernUse: "The Fast Fourier Transform (FFT) is called the most important algorithm of the 20th century. It powers MP3 compression, JPEG images, Wi-Fi, MRI machines, noise-cancelling headphones, and voice recognition. Every time you stream music, Fourier is running.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Add harmonics — watch sine waves build toward a square wave (the principle behind all audio compression):</div>
+      <canvas id="fourier-canvas" style="height:120px;width:100%;border-radius:8px"></canvas>
+      <div class="range-container" style="margin-top:8px">
+        <div class="range-label"><span>1 harmonic</span><span>19 harmonics</span></div>
+        <input type="range" id="fourier-harmonics" min="1" max="19" step="2" value="1">
+      </div>`
+  },
+  boole: {
+    key: 'boole', emoji: '⊕', name: 'George Boole',
+    dates: '1815–1864 CE (died age 49)',
+    headline: "I reduced all of logic to algebra — TRUE or FALSE, AND, OR, NOT. One hundred years later, it became the language of every computer.",
+    location: "Cork, Ireland (Queen's College Cork — a self-taught mathematician who became a professor without a university degree)",
+    bigIdea: "Boole published 'An Investigation of the Laws of Thought' (1854), showing that logical reasoning could be expressed as algebra where variables take only two values: true/false (1/0). His system — now called Boolean algebra — sat as an intellectual curiosity for 80 years until Claude Shannon proved it was the mathematical foundation of digital circuits.",
+    funFact: "Boole was entirely self-taught — his father was a cobbler. He learned Latin and Greek from a local bookseller, then taught himself advanced mathematics from library books. He became a professor without ever having a degree.",
+    connections: ['Gauss', 'Cantor', 'Turing', 'Shannon'],
+    vibe: ['Self-made', 'Ahead of his time', 'Tragically short-lived'],
+    difficulty: 2,
+    modernUse: "Every transistor in every chip is a Boolean logic gate. Every if/else in every program is Boole's algebra. The 15 billion chips in the world today run on his 1854 paper.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Type a Boolean expression — Boole's algebra evaluated live:</div>
+      <input type="text" class="num-input" id="bool-input" value="TRUE AND NOT FALSE" placeholder="e.g. TRUE AND (FALSE OR TRUE)">
+      <div id="bool-out" class="output-display" style="margin-top:8px;font-size:11px;min-height:40px"></div>
+      <div style="font-size:8px;color:var(--text-dim);margin-top:4px;font-family:'DM Mono',monospace">Use: TRUE, FALSE, AND, OR, NOT, ( )</div>`
+  },
+  cantor: {
+    key: 'cantor', emoji: '∞', name: 'Georg Cantor',
+    dates: '1845–1918 CE (died age 72)',
+    headline: "I proved that some infinities are bigger than others. Most mathematicians thought I was insane. I had three nervous breakdowns. I was right.",
+    location: "Halle, Germany (University of Halle — his rival Kronecker at Berlin blocked his career for years)",
+    bigIdea: "Cantor proved that infinite sets come in different sizes. The integers and rational numbers are 'countably infinite,' but real numbers are a strictly larger infinity — 'uncountably infinite.' He also proved the Cantor set: a fractal with infinitely many points but zero length. His ideas were so radical that leading mathematicians called them 'a disease' and 'mathematical nonsense.' He was right about all of it.",
+    funFact: "Cantor's arch-nemesis, Leopold Kronecker, called him a 'corrupter of youth' and reportedly blocked Cantor's appointment to Berlin for years. Cantor died in a mental sanatorium. Within decades of his death, his set theory became the foundation of all of modern mathematics.",
+    connections: ['Gauss', 'Boole', 'Poincaré', 'Turing'],
+    vibe: ['Visionary', 'Persecuted', 'Vindicated posthumously'],
+    difficulty: 5,
+    modernUse: "Cantor's set theory is the foundation of modern mathematics — every branch is now built on set-theoretic axioms. His diagonal argument inspired Turing's proof that some problems are algorithmically unsolvable.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">The Cantor Set — remove middle thirds infinitely. Infinite points remain, yet the total length → 0:</div>
+      <canvas id="cantor-canvas" style="height:120px;width:100%;border-radius:8px;background:rgba(0,0,0,0.4)"></canvas>`
+  },
+  turing: {
+    key: 'turing', emoji: '⚙', name: 'Alan Turing',
+    dates: '1912–1954 CE (died age 41)',
+    headline: "I invented the theoretical computer before physical computers existed, helped win World War II by cracking Enigma, and was then persecuted by the government I saved.",
+    location: "Bletchley Park, England and Manchester (Bletchley Park — the top-secret WWII codebreaking center, then Manchester for computing)",
+    bigIdea: "In 1936, Turing defined the 'Universal Turing Machine' — a theoretical device that could simulate any algorithm given sufficient memory. This paper defined what computation means, 10 years before physical computers existed. He also broke the Nazi Enigma cipher at Bletchley Park (shortening WWII by an estimated 2 years), and proposed the Turing Test for machine intelligence.",
+    funFact: "Turing was prosecuted in 1952 for homosexuality (then illegal in Britain) and subjected to chemical castration. He died in 1954 — an apparent suicide, though the circumstances remain disputed. In 2013, the Queen granted him a posthumous royal pardon. In 2021, his face appeared on the British £50 note.",
+    connections: ['Boole', 'Cantor', 'Shannon', 'von Neumann'],
+    vibe: ['Visionary', 'Tragic', 'Foundational'],
+    difficulty: 4,
+    modernUse: "Every computer, every smartphone, every server is a physical implementation of Turing's theoretical machine. The Church-Turing thesis — that any computable function can be computed by a Turing machine — is the theoretical bedrock of computer science.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Turing Machine: adds two unary numbers (111 + 11 = 11111). Watch it step through states:</div>
+      <div id="turing-tape" style="font-size:11px;margin-bottom:8px;overflow-x:auto;white-space:nowrap;padding:4px 0"></div>
+      <div id="turing-state" style="font-family:'DM Mono',monospace;font-size:9px;color:var(--accent);margin-bottom:8px">State: q0</div>
+      <div style="display:flex;gap:8px">
+        <button class="sim-btn" id="turing-run">Run</button>
+        <button class="sim-btn" id="turing-reset">Reset</button>
+      </div>`
+  },
+  shannon: {
+    key: 'shannon', emoji: '📡', name: 'Claude Shannon',
+    dates: '1916–2001 CE (died age 84)',
+    headline: "I invented the bit. I proved there's a mathematical limit to how much information any channel can carry. Then I rode a unicycle through Bell Labs.",
+    location: "Bell Labs, New Jersey and MIT (Bell Labs — the most productive research lab in history, responsible for the transistor, laser, Unix, and information theory)",
+    bigIdea: "Shannon's 1948 paper 'A Mathematical Theory of Communication' founded information theory. He defined the 'bit' as the fundamental unit of information, proved that any noisy communication channel has a theoretical maximum data rate (the Shannon limit), and showed that data can always be compressed to its entropy — the minimum bits needed. All of digital communication theory follows from this one paper.",
+    funFact: "Shannon rode a unicycle through Bell Labs while juggling, built a flame-throwing trumpet, and designed a machine whose only function was to turn itself off when you switched it on. He was also a brilliant investor — he had a formula for stock market returns before Buffett was famous.",
+    connections: ['Boole', 'Turing', 'Fourier', 'von Neumann'],
+    vibe: ['Playful genius', 'Foundational', 'Unicycling juggler'],
+    difficulty: 4,
+    modernUse: "Every Wi-Fi protocol, every streaming codec, every error-correcting code, every data compression algorithm (ZIP, MP3, JPEG) operates within bounds Shannon defined. When your phone gets 5 bars, engineers worked to approach Shannon's theoretical limit.",
+    interactiveHTML: `
+      <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px">Type text — Shannon's entropy measures how much information (surprise) it contains:</div>
+      <input type="text" class="num-input" id="shannon-input" value="Hello World" placeholder="Type anything...">
+      <canvas id="shannon-canvas" style="height:60px;width:100%;border-radius:6px;margin-top:8px;background:rgba(0,0,0,0.4)"></canvas>
+      <div id="shannon-out" class="output-display" style="margin-top:6px;font-size:10px;min-height:40px"></div>`
+  }
+};
+
+// ======= TIMELINE DATA =======
+const EVENTS = [
+  {
+    date: 'c. 2000–1800 BCE', name: 'The Babylonians', location: 'Mesopotamia, Iraq',
+    key: 'babylonians',
+    desc: 'Working in base-60 (sexagesimal), Babylonian mathematicians recorded Pythagorean triples on clay tablets over a millennium before Pythagoras was born. Their number system — still alive in our 60-second minutes and degree measurements — was optimized for astronomy and engineering.',
+    today: 'GPS satellites use base-60 angle measurement. Every clock on Earth runs on Babylonian math.',
+    meanwhile: 'The Epic of Gilgamesh is being written down. The wheel is already 500 years old. The great pyramids of Giza were built just 400 years ago, and they still gleam white.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Giza_plateau_from_above.jpg/320px-Giza_plateau_from_above.jpg', caption: 'The Pyramids of Giza — 400 years old and gleaming white' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Plimpton_322.jpg/320px-Plimpton_322.jpg', caption: 'Plimpton 322 — a real Babylonian math tablet, c. 1800 BCE' },
+    ]
+  },
+  {
+    date: 'c. 300 BCE', name: 'Euclid', location: 'Alexandria, Egypt',
+    key: 'euclid',
+    desc: 'Euclid\'s Elements built all of geometry from five axioms using pure deductive logic — the first time anyone proved mathematical truths from first principles rather than measuring and observing. It remained the primary geometry textbook for 2,000 years.',
+    today: 'Euclidean deductive logic is the direct ancestor of all computer logic — every if/then statement is Euclidean reasoning.',
+    meanwhile: 'Alexander the Great died 23 years ago. The Library of Alexandria just opened. Rome is a medium-sized city in central Italy, having no idea what it\'s about to become.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Ancientlibraryalex.jpg/320px-Ancientlibraryalex.jpg', caption: 'Artist\'s vision of the Library of Alexandria — just opened' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Alexander_the_Great_mosaic.jpg/320px-Alexander_the_Great_mosaic.jpg', caption: 'Alexander the Great — died 23 years before Euclid wrote Elements' },
+    ]
+  },
+  {
+    date: 'c. 287–212 BCE', name: 'Archimedes', location: 'Syracuse, Sicily',
+    key: 'archimedes',
+    desc: 'Archimedes approximated π by inscribing and circumscribing polygons around a circle with up to 96 sides — getting within 0.04% of the true value. He also calculated areas and volumes, discovered buoyancy, and invented war machines. The polygon method is conceptually the limit process at the heart of calculus.',
+    today: 'Every circular calculation in engineering uses π. NASA uses 39 decimal places for spacecraft trajectories.',
+    meanwhile: 'Rome and Carthage are in the middle of the Second Punic War. Hannibal crossed the Alps with war elephants two years ago. Archimedes\' war machines held off Rome\'s siege of Syracuse for years.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Hannibal_traverse_rhone.jpg/320px-Hannibal_traverse_rhone.jpg', caption: 'Hannibal crossing the Alps with war elephants, c. 218 BCE' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Archimedes_screw_from_mechanisms_and_mechanical_movements.jpg/240px-Archimedes_screw_from_mechanisms_and_mechanical_movements.jpg', caption: 'The Archimedes screw — he invented this too' },
+    ]
+  },
+  {
+    date: 'c. 262–190 BCE', name: 'Apollonius of Perga', location: 'Perga, Turkey & Alexandria',
+    key: 'apollonius',
+    desc: 'Apollonius showed that three seemingly unrelated curves — the parabola, ellipse, and hyperbola — all arise from slicing a cone at different angles. He named them, derived their properties, and developed the mathematics to work with them. The applications wouldn\'t be understood for 1,800 years.',
+    today: 'Parabolas focus satellite dishes. Ellipses ARE planetary orbits. Hyperbolas power GPS triangulation.',
+    meanwhile: 'The Silk Road is opening between China and Rome. The Great Wall of China is under construction. Humanity is becoming globally connected for the very first time.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/SilkRoadMap.jpg/320px-SilkRoadMap.jpg', caption: 'The Silk Road — connecting East and West for the first time' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/The_Great_Wall_of_China_at_Jinshanling-edit.jpg/320px-The_Great_Wall_of_China_at_Jinshanling-edit.jpg', caption: 'The Great Wall of China — under construction' },
+    ]
+  },
+  {
+    date: 'c. 100–170 CE', name: 'Claudius Ptolemy', location: 'Alexandria, Egypt',
+    key: 'ptolemy',
+    desc: 'Ptolemy compiled and extended centuries of Greek trigonometry into a coherent system, producing chord tables equivalent to modern sine and cosine. His geocentric model of the universe was wrong — but the trig he built to make it work was so accurate that navigators used it for 1,400 years.',
+    today: 'Sine and cosine describe every oscillating system in nature: sound waves, AC electricity, light, tides, pendulums. Your speaker converts a mathematical sine wave into air pressure.',
+    meanwhile: 'The Roman Empire is at its absolute peak. The Colosseum was completed just 20 years ago. Paper has just been invented in China.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Colosseum_in_Rome%2C_Italy_-_April_2007.jpg/320px-Colosseum_in_Rome%2C_Italy_-_April_2007.jpg', caption: 'The Colosseum — completed just 20 years ago' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Roman_Empire_Trajan_117AD.png/320px-Roman_Empire_Trajan_117AD.png', caption: 'The Roman Empire at its greatest extent, 117 CE' },
+    ]
+  },
+  {
+    date: 'c. 476–550 CE', name: 'Aryabhata', location: 'Patna, India',
+    key: 'aryabhata',
+    desc: 'Aryabhata formalized zero as a number, produced the first systematic sine table, calculated π to four decimal places (3.1416), and proposed that the Earth rotates on its axis rather than the stars moving around it. Writing in verse, he compressed mathematical discoveries of extraordinary scope into elegant Sanskrit shlokas.',
+    today: 'Zero as a true mathematical value is the foundation of binary code — and every digital device on Earth.',
+    meanwhile: 'The Western Roman Empire collapsed 76 years ago. Europe is in the Dark Ages. The Gupta Empire in India is one of the most advanced civilizations on Earth.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Gupta_Empire_320_550_ce.png/320px-Gupta_Empire_320_550_ce.png', caption: 'The Gupta Empire — home to Aryabhata and advanced astronomy' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Nalanda_University_ruins.jpg/320px-Nalanda_University_ruins.jpg', caption: 'Nalanda University — the ancient world\'s greatest center of learning' },
+    ]
+  },
+  {
+    date: 'c. 820 CE', name: 'Al-Khwarizmi', location: 'Baghdad, Iraq',
+    key: 'alkhwarizmi',
+    desc: 'Working at the legendary House of Wisdom in Baghdad, Al-Khwarizmi wrote the book that gave us both "algebra" and "algorithm." He formalized the idea that equations could be solved by systematic, repeatable step-by-step procedures — the first algorithm — and introduced Hindu-Arabic numerals to the Western world through his work.',
+    today: 'The word "algorithm" comes from his name. Every search engine, recommendation system, and social media feed is his intellectual descendant.',
+    meanwhile: 'The Islamic Golden Age is in full bloom. Baghdad is the largest city in the world. Charlemagne\'s empire has just fragmented. The Viking Age has begun in Scandinavia.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Oseberg_ship_bow_2013.jpg/240px-Oseberg_ship_bow_2013.jpg', caption: 'The Oseberg Viking ship — the Age of Vikings begins' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Image-Al-Kitab_al-makhtotat.jpg/240px-Image-Al-Kitab_al-makhtotat.jpg', caption: 'Al-Khwarizmi\'s original algebra manuscript' },
+    ]
+  },
+  {
+    date: 'c. 1202 CE', name: 'Leonardo Fibonacci', location: 'Pisa, Italy',
+    key: 'fibonacci',
+    desc: 'Fibonacci\'s Liber Abaci introduced Hindu-Arabic numerals — the digits 0–9 — to medieval Europe, replacing Roman numerals and revolutionizing commerce and mathematics. The famous sequence bearing his name appears in the book as a solved rabbit-breeding problem. It would eventually be found everywhere in nature.',
+    today: 'Fibonacci ratios appear in plant spirals, flower petals, nautilus shells, stock technical analysis, and UI design proportions.',
+    meanwhile: 'The Fourth Crusade sacked Constantinople two years ago. The Magna Carta is 13 years away. Genghis Khan is unifying the Mongol tribes. The Tower of Pisa is under construction in Fibonacci\'s hometown.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Leaning_tower_of_pisa.jpg/213px-Leaning_tower_of_pisa.jpg', caption: 'The Tower of Pisa — under construction in Fibonacci\'s hometown' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Genghis_Khan_empire.png/320px-Genghis_Khan_empire.png', caption: 'The Mongol Empire forming under Genghis Khan' },
+    ]
+  },
+  {
+    date: '1545 CE', name: 'Gerolamo Cardano', location: 'Milan, Italy',
+    key: 'cardano',
+    desc: 'Cardano published the first solutions to cubic and quartic equations in Ars Magna — a landmark in algebra. His gambling-driven book on probability, Liber de Ludo Aleae, laid the mathematical groundwork for randomness. He also stumbled on imaginary numbers while solving cubics, calling them "mentally tortured" but using them anyway.',
+    today: 'Probability theory underlies insurance, weather forecasting, medical trials, and every financial risk model in the world.',
+    meanwhile: 'Copernicus published his heliocentric model 2 years ago. Michelangelo is alive. The printing press is 100 years old. The Scientific Revolution is just beginning to ignite.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Michelangelo%27s_Pieta_5450_cropncleaned_edit.jpg/213px-Michelangelo%27s_Pieta_5450_cropncleaned_edit.jpg', caption: 'Michelangelo\'s Pietà — he\'s still alive at 70' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Portrait_of_Nicolaus_Copernicus.jpg/240px-Portrait_of_Nicolaus_Copernicus.jpg', caption: 'Copernicus — just dropped his heliocentric bombshell' },
+    ]
+  },
+  {
+    date: 'c. 1591 CE', name: 'François Viète', location: 'Paris, France',
+    key: 'viete',
+    desc: 'Viète introduced the systematic use of letters to represent both known constants and unknown variables in algebraic equations — the first time algebra became truly symbolic rather than procedural and verbal. This single conceptual shift made algebra generalizable and set the stage for everything that followed.',
+    today: 'Every equation you write — y = mx + b, x² + y² = r², f(x) = ... — uses the symbolic language Viète invented.',
+    meanwhile: 'Shakespeare is 27 years old. The Spanish Armada was defeated 3 years ago. Galileo is doing his first experiments. Europe is in the middle of the Scientific Revolution.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Shakespeare.jpg/240px-Shakespeare.jpg', caption: 'Shakespeare — 27 years old, writing his early plays' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Invincible_Armada.jpg/320px-Invincible_Armada.jpg', caption: 'The Spanish Armada — defeated just 3 years ago' },
+    ]
+  },
+  {
+    date: '1614 CE', name: 'John Napier', location: 'Edinburgh, Scotland',
+    key: 'napier',
+    desc: 'Napier spent 20 years computing the first logarithm table by hand, turning multiplication of enormous numbers into addition — making astronomical calculations exponentially (literally) easier. His work saved the astronomical community decades of calculation time and was praised by Kepler as almost miraculous.',
+    today: 'Logarithmic scales express vast ranges: Richter (earthquakes), decibels (sound), pH (chemistry), stellar magnitude. A Richter difference of 1 = 10x more energy.',
+    meanwhile: 'Galileo is alive and building telescopes. Shakespeare has 2 years left. Kepler is mapping planetary orbits. He will call Napier\'s logs a miracle.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Justus_Sustermans_-_Portrait_of_Galileo_Galilei%2C_1636.jpg/240px-Justus_Sustermans_-_Portrait_of_Galileo_Galilei%2C_1636.jpg', caption: 'Galileo — building telescopes, changing everything' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Johannes_Kepler_1610.jpg/240px-Johannes_Kepler_1610.jpg', caption: 'Johannes Kepler — who called Napier\'s logs a miracle' },
+    ]
+  },
+  {
+    date: '1637 CE', name: 'René Descartes', location: 'Amsterdam, Netherlands',
+    key: 'descartes',
+    desc: 'By introducing the coordinate plane in La Géométrie, Descartes unified geometry and algebra into a single system. Geometric shapes became algebraic equations; algebraic equations became curves. This made calculus possible — Newton needed coordinates to express rates of change as slopes of curves.',
+    today: 'Coordinate planes underlie GPS, computer graphics, mapping software, robotics, and all data visualization. Every (x, y) coordinate in existence is his.',
+    meanwhile: 'Galileo just published his Dialogue and will be tried by the Inquisition. Harvard College was founded last year, 1636. The Thirty Years\' War grinds on across Europe.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Harvard_University_Cambridge_MA.jpg/320px-Harvard_University_Cambridge_MA.jpg', caption: 'Harvard College — founded just last year, 1636' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Galileo_affair.jpg/320px-Galileo_affair.jpg', caption: 'Galileo before the Inquisition — his trial is 2 years away' },
+    ]
+  },
+  {
+    date: '1665–1687 CE', name: 'Isaac Newton', location: 'Cambridge, England',
+    key: 'newton',
+    desc: 'Newton developed calculus (which he called "the method of fluxions") to solve problems of rates of change and areas under curves. He used it to prove that planetary orbits are ellipses — unifying terrestrial and celestial physics for the first time. He published Principia Mathematica in 1687, one of the most consequential books ever written.',
+    today: 'Calculus is used to model every continuously changing system: spacecraft trajectories, disease spread, machine learning, digital animation, optimization of any kind.',
+    meanwhile: 'The Great Fire of London burned in 1666. The bubonic plague forced Cambridge to close. Newton invented calculus during two years of forced plague isolation — history\'s most productive sabbatical.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Great_Fire_London.jpg/320px-Great_Fire_London.jpg', caption: 'The Great Fire of London, 1666 — Newton was 23' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/GodfreyKneller-IsaacNewton-1689.jpg/240px-GodfreyKneller-IsaacNewton-1689.jpg', caption: 'Isaac Newton, 1689 — two years after Principia' },
+    ]
+  },
+  {
+    date: '1683 CE', name: 'Jacob Bernoulli', location: 'Basel, Switzerland',
+    key: 'bernoulli',
+    desc: 'While investigating compound interest, Bernoulli discovered that as compounding frequency increases to infinity, growth converges to a specific irrational number — e ≈ 2.71828. He also established the law of large numbers in probability theory: with enough trials, observed frequency converges to theoretical probability.',
+    today: 'e describes every system that grows or decays continuously: bank interest, population dynamics, radioactive decay, charging capacitors, the cooling of your coffee.',
+    meanwhile: 'The Ottoman siege of Vienna just failed — halting Islamic expansion into Europe. The Age of Enlightenment is dawning. Newton\'s Principia is 4 years away.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Battle_of_Vienna_1683.JPG/320px-Battle_of_Vienna_1683.JPG', caption: 'The Battle of Vienna, 1683 — a turning point in history' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/GodfreyKneller-IsaacNewton-1689.jpg/240px-GodfreyKneller-IsaacNewton-1689.jpg', caption: 'Newton — Principia is just 4 years away' },
+    ]
+  },
+  {
+    date: 'c. 1720–1748 CE', name: 'Leonhard Euler', location: 'St. Petersburg & Berlin',
+    key: 'euler',
+    desc: 'Euler formalized function notation f(x), popularized e and i, proved Euler\'s identity (e^iπ + 1 = 0), and produced roughly 886 publications across every branch of mathematics. He continued publishing for 17 years after going completely blind, dictating proofs from memory. No single person has contributed more symbols and notation to modern mathematics.',
+    today: 'f(x) notation is the language of all programming. Euler\'s identity appears in quantum mechanics and signal processing. e^iθ underlies AC circuit analysis and audio engineering.',
+    meanwhile: 'The Industrial Revolution is beginning in Britain. Benjamin Franklin is running his famous electricity experiments. The American Revolution is 30 years away.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Benjamin_Franklin_by_Joseph_Duplessis_1778.jpg/240px-Benjamin_Franklin_by_Joseph_Duplessis_1778.jpg', caption: 'Benjamin Franklin — flying kites in thunderstorms for science' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Newcomen_atmospheric_engine_animation.gif/240px-Newcomen_atmospheric_engine_animation.gif', caption: 'The Newcomen steam engine — Industrial Revolution begins' },
+    ]
+  },
+  {
+    date: '1796–1855 CE', name: 'Carl Friedrich Gauss', location: 'Göttingen, Germany',
+    key: 'gauss',
+    desc: 'Gauss proved the Fundamental Theorem of Algebra, invented modular arithmetic, discovered the normal distribution (the bell curve), and developed the method of least squares — the foundation of all statistical regression. His unpublished notebooks contained discoveries others wouldn\'t find for decades. He surveyed the Kingdom of Hanover by hand and in doing so invented differential geometry.',
+    today: 'The normal distribution governs statistical inference everywhere: polls, clinical trials, manufacturing quality control, financial risk models, and machine learning error analysis.',
+    meanwhile: 'The French Revolution has just ended. Napoleon is conquering Europe. The steam locomotive is invented. The United States is 20 years old.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg/240px-Jacques-Louis_David_-_The_Emperor_Napoleon_in_His_Study_at_the_Tuileries_-_Google_Art_Project.jpg', caption: 'Napoleon — conquering Europe while Gauss mapped Germany' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Stephenson%27s_Rocket.png/240px-Stephenson%27s_Rocket.png', caption: 'Stephenson\'s Rocket — the steam locomotive is invented' },
+    ]
+  },
+  {
+    date: '1807–1822 CE', name: 'Joseph Fourier', location: 'Paris, France',
+    key: 'fourier',
+    desc: 'Fourier proved that any periodic wave — no matter how complex — can be broken down into a sum of simple sine and cosine waves. He developed this while studying heat flow in metal plates. The Fourier transform turned his mathematical insight into the universal tool for analyzing any signal.',
+    today: 'The Fast Fourier Transform powers MP3, JPEG, Wi-Fi, MRI machines, noise-cancelling headphones, speech recognition, and radar. Called the most important algorithm of the 20th century.',
+    meanwhile: 'Napoleon has been exiled. The Industrial Revolution is in full swing. The first photograph is 20 years away. Beethoven composes his 9th Symphony deaf.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Beethoven_Horneman.jpg/240px-Beethoven_Horneman.jpg', caption: 'Beethoven — composing his 9th Symphony while deaf' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Dampfturbine_Laval_1883_Patentzeichnung_-_restoration2.png/240px-Dampfturbine_Laval_1883_Patentzeichnung_-_restoration2.png', caption: 'The Industrial Revolution — steam power changing everything' },
+    ]
+  },
+  {
+    date: '1847–1854 CE', name: 'George Boole', location: 'Cork, Ireland',
+    key: 'boole',
+    desc: 'In "The Laws of Thought" (1854), Boole showed all logical reasoning could be expressed as algebra where variables are only TRUE or FALSE. AND, OR, NOT became mathematical operations. The system sat as pure philosophy for 80 years — until Shannon proved it was the language of electrical circuits.',
+    today: 'Every transistor is a Boolean gate. Every if/else statement is Boolean algebra. Every chip on Earth — 15+ billion of them — runs on Boole\'s 1854 paper.',
+    meanwhile: 'The California Gold Rush has just ended. The Crimean War begins. Darwin is quietly developing the theory of natural selection. The first transatlantic telegraph cable is being planned.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Charles_Darwin_seated_crop.jpg/240px-Charles_Darwin_seated_crop.jpg', caption: 'Charles Darwin — quietly working on natural selection' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Telegraph_transmitter.jpg/240px-Telegraph_transmitter.jpg', caption: 'The telegraph — the first long-distance electrical communication' },
+    ]
+  },
+  {
+    date: '1874–1891 CE', name: 'Georg Cantor', location: 'Halle, Germany',
+    key: 'cantor',
+    desc: 'Cantor proved that infinite sets have different sizes — the integers are a smaller infinity than the real numbers. He invented set theory, the Cantor set (a fractal), and the diagonal argument. Leading mathematicians declared his work insane. He had multiple nervous breakdowns and died in a sanatorium. He was completely right.',
+    today: 'Set theory is now the foundation of all mathematics. Cantor\'s diagonal argument directly inspired Turing\'s proof that some problems are algorithmically unsolvable.',
+    meanwhile: 'Edison invents the lightbulb. The telephone is invented. Nietzsche publishes "Thus Spoke Zarathustra." The Brooklyn Bridge opens. Jack the Ripper terrorizes London.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Brooklyn_Bridge_Postdlf.jpg/320px-Brooklyn_Bridge_Postdlf.jpg', caption: 'The Brooklyn Bridge opens, 1883 — engineering meets mathematics' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/GE_Edison_Bulb.jpg/240px-GE_Edison_Bulb.jpg', caption: 'Edison\'s lightbulb — the electrical age begins' },
+    ]
+  },
+  {
+    date: '1905–1915 CE', name: 'Albert Einstein', location: 'Bern & Berlin',
+    key: 'einstein',
+    desc: 'Einstein\'s special relativity (1905) and general relativity (1915) rewrote physics using advanced mathematics — tensors, differential geometry, and non-Euclidean geometry. Space and time became a single curved manifold. Energy and mass became equivalent (E=mc²). Gravity became geometry. None of this would have been possible without Gauss\'s differential geometry and Riemann\'s curved spaces.',
+    today: 'GPS satellites must apply relativistic corrections — clocks run faster in orbit and slower near Earth\'s gravity. Without Einstein\'s equations, GPS would drift by 11 km per day.',
+    meanwhile: 'The Wright Brothers flew at Kitty Hawk 2 years ago. World War I is approaching. Picasso paints Les Demoiselles d\'Avignon. The Titanic hasn\'t sunk yet.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Eugène_Atget%2C_Versailles%2C_1901.jpg/240px-Eugène_Atget%2C_Versailles%2C_1901.jpg', caption: 'The early 1900s — the world Einstein changed forever' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Wrightflyer.jpg/320px-Wrightflyer.jpg', caption: 'The Wright Brothers — flight achieved just 2 years before relativity' },
+    ]
+  },
+  {
+    date: '1936–1945 CE', name: 'Alan Turing', location: 'Cambridge & Bletchley Park',
+    key: 'turing',
+    desc: 'Turing\'s 1936 paper defined the theoretical computer — a "universal machine" that could simulate any algorithm — before any physical computer existed. He then used this thinking to crack the Nazi Enigma cipher at Bletchley Park, a feat historians estimate shortened World War II by 2–4 years and saved 14 million lives. He later proposed the Turing Test for machine intelligence.',
+    today: 'Every computer is a physical Turing machine. The limits Turing proved mathematically — problems that cannot be solved algorithmically — still define what computers can and cannot do.',
+    meanwhile: 'World War II kills 70–85 million people. The atomic bomb is developed. Penicillin is discovered. The United Nations is founded. The Cold War begins.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Bletchley_Park_main_house.jpg/320px-Bletchley_Park_main_house.jpg', caption: 'Bletchley Park — where Turing cracked Enigma in secret' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Nuremberg_courtroom_1945.jpg/320px-Nuremberg_courtroom_1945.jpg', caption: 'The Nuremberg Trials, 1945 — the war Turing helped end' },
+    ]
+  },
+  {
+    date: '1948 CE', name: 'Claude Shannon', location: 'Bell Labs, New Jersey',
+    key: 'shannon',
+    desc: 'Shannon\'s 1948 paper "A Mathematical Theory of Communication" invented information theory in a single stroke. He defined the bit, proved every communication channel has a maximum information rate (the Shannon limit), and showed that data can always be compressed to its mathematical entropy. No algorithm can compress data below this limit — a fact still true today.',
+    today: 'Wi-Fi, 5G, streaming video, MP3, JPEG, ZIP files, error-correcting codes in CDs and space probes — all operate within Shannon\'s mathematical bounds. His paper is arguably the most practically consequential in science.',
+    meanwhile: 'The transistor is invented at Bell Labs the same year. The Cold War begins. The Marshall Plan rebuilds Europe. Orwell publishes 1984.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/2019_Women_in_Technology_International_(WITI)_conference_-_Bell_Labs_Tour_(32859484577).jpg/320px-2019_Women_in_Technology_International_(WITI)_conference_-_Bell_Labs_Tour_(32859484577).jpg', caption: 'Bell Labs — birthplace of the transistor, Unix, and information theory' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Bundesarchiv_Bild_183-61849-0002%2C_Berlin%2C_Marshallplan-Hilfe.jpg/320px-Bundesarchiv_Bild_183-61849-0002%2C_Berlin%2C_Marshallplan-Hilfe.jpg', caption: 'The Marshall Plan — Shannon\'s year, the world rebuilding' },
+    ]
+  },
+  {
+    date: '1994 CE', name: 'Andrew Wiles', location: 'Princeton, USA',
+    key: 'wiles',
+    desc: 'Wiles proved Fermat\'s Last Theorem — the conjecture that had resisted proof for 358 years. Fermat had scrawled in 1637 that he had "a remarkable proof" that no three positive integers can satisfy aⁿ + bⁿ = cⁿ for n > 2. He never wrote it down. Wiles worked on the proof in secret for 7 years, had a catastrophic error discovered, fixed it in a year of sleepless work, and published in 1995.',
+    today: 'Wiles\'s proof used elliptic curves and modular forms — tools with direct applications in modern cryptography. The security of HTTPS depends on elliptic curve mathematics.',
+    meanwhile: 'The World Wide Web is 5 years old. Nelson Mandela becomes South Africa\'s president. The Hubble Space Telescope is repaired. The first smartphones are a decade away.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Nelson_Mandela_1994.jpg/240px-Nelson_Mandela_1994.jpg', caption: 'Nelson Mandela — elected president the same year Wiles solved Fermat' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/HST-SM4.jpeg/240px-HST-SM4.jpeg', caption: 'Hubble Space Telescope — repaired and seeing the universe clearly' },
+    ]
+  },
+  {
+    date: '2003 CE', name: 'Grigori Perelman', location: 'St. Petersburg, Russia',
+    key: 'perelman',
+    desc: 'Perelman posted a proof of the Poincaré Conjecture — one of mathematics\' seven Millennium Prize Problems — to the internet without fanfare, then disappeared. The conjecture (every simply connected 3-manifold is topologically a sphere) had been open since 1904. Perelman was awarded the Fields Medal and the $1 million Millennium Prize. He declined both, returned to obscurity, and reportedly lives with his mother.',
+    today: 'The mathematical techniques Perelman used (Ricci flow) have applications in understanding the shape of the universe and in computer vision. The Poincaré Conjecture settled a century of debate about the topology of space.',
+    meanwhile: 'The Iraq War begins. MySpace launches (Facebook is a year away). The Human Genome Project completes. The Concorde makes its final flight.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/International_Space_Station_after_undocking_of_STS-132.jpg/320px-International_Space_Station_after_undocking_of_STS-132.jpg', caption: 'The International Space Station — mathematics guides its orbit' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/01/Human_genome_DNA_sequence_%28Nicolle_Rager_Fuller%2C_NSF%29.jpg/240px-Human_genome_DNA_sequence_%28Nicolle_Rager_Fuller%2C_NSF%29.jpg', caption: 'The Human Genome — decoded the same year Perelman solved Poincaré' },
+    ]
+  },
+  {
+    date: '2012–2025 CE', name: 'Deep Learning & AI', location: 'Global',
+    key: 'ai',
+    desc: 'The resurgence of neural networks, powered by calculus (backpropagation), linear algebra (matrix multiplication), probability theory (Bayesian inference), and information theory (cross-entropy), transformed AI. ImageNet (2012), AlphaGo (2016), GPT-3 (2020), and ChatGPT (2022) were all built on 18th–20th century mathematics — Euler\'s functions, Gauss\'s distributions, Shannon\'s entropy, Fourier\'s transforms.',
+    today: 'Every large language model, image generator, recommendation system, and self-driving car is applied precalculus and calculus running at enormous scale. The math you\'re studying right now is the literal foundation of AI.',
+    meanwhile: 'The iPhone is 15 years old. COVID-19 reshapes civilization. SpaceX lands rockets on drone ships. James Webb Telescope photographs galaxies from 13 billion years ago.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Webb%27s_First_Deep_Field_%28adjusted%29.jpg/320px-Webb%27s_First_Deep_Field_%28adjusted%29.jpg', caption: 'James Webb Space Telescope — galaxies 13 billion years old, guided by math' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/SpaceX_CRS-8_launch.jpg/240px-SpaceX_CRS-8_launch.jpg', caption: 'SpaceX reusable rocket — Newton\'s calculus landing a booster' },
+    ]
+  },
+  {
+    date: 'February 19, 2026', name: 'You', location: 'Here',
+    key: 'you',
+    desc: 'You are studying precalculus — the accumulated mathematical knowledge of 4,000 years of human civilization. The functions, graphs, and equations in your textbook were forged by people in ancient Mesopotamia, medieval Baghdad, Renaissance Italy, and modern Princeton. Every concept has a story. Every formula solved a real problem first.',
+    today: 'The math you\'re learning right now is the literal prerequisite for AI, cryptography, physics, medicine, and every digital technology that shapes the 21st century. You\'re not just studying math. You\'re inheriting 4,000 years of human ingenuity.',
+    meanwhile: 'AI systems are answering questions in real time. Mars rovers explore another planet. mRNA vaccines have reshaped medicine. 8 billion humans share a networked planet. And all of it runs on the math that started with clay tablets in ancient Babylon.',
+    mwImages: [
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Perseverance_rover_side_with_Ingenuity.png/320px-Perseverance_rover_side_with_Ingenuity.png', caption: 'Perseverance on Mars — guided by calculus and linear algebra' },
+      { url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Webb%27s_First_Deep_Field_%28adjusted%29.jpg/320px-Webb%27s_First_Deep_Field_%28adjusted%29.jpg', caption: 'Webb Deep Field — 4,000 years of math, looking back 13 billion years' },
+    ]
+  }
+];
+
+// ======= BUILD TIMELINE =======
+function buildTimeline() {
+  const container = document.getElementById('timeline');
+
+  EVENTS.forEach((ev, idx) => {
+    const side = idx % 2 === 0 ? 'left' : 'right';
+
+    // Era dividers
+    if (idx === 0) container.insertAdjacentHTML('beforeend', `<div class="era-divider"><span>Ancient World</span></div>`);
+    if (idx === 5) container.insertAdjacentHTML('beforeend', `<div class="era-divider"><span>The Classical Period & Beyond</span></div>`);
+    if (idx === 8) container.insertAdjacentHTML('beforeend', `<div class="era-divider"><span>The Renaissance</span></div>`);
+    if (idx === 12) container.insertAdjacentHTML('beforeend', `<div class="era-divider"><span>The Birth of Modern Mathematics</span></div>`);
+    if (idx === 16) container.insertAdjacentHTML('beforeend', `<div class="era-divider"><span>The 19th Century — Abstraction & Rigor</span></div>`);
+    if (idx === 21) container.insertAdjacentHTML('beforeend', `<div class="era-divider"><span>The 20th Century — The Digital Age</span></div>`);
+    if (idx === 26) container.insertAdjacentHTML('beforeend', `<div class="era-divider"><span>The 21st Century — Mathematics Now</span></div>`);
+
+    const hasProfile = !!PROFILES[ev.key];
+
+    const eventHTML = `
+      <div class="event ${side}" data-map-key="${ev.key}">
+        <div class="event-card">
+          <div class="event-date">${ev.date}</div>
+          <div class="event-name">${ev.name}</div>
+          <div class="event-location">${ev.location}</div>
+          <div class="event-desc">${ev.desc}</div>
+          <div class="expandable" id="today-${idx}">
+            <button class="expandable-header" onclick="toggleExpand(document.getElementById('today-${idx}'))" aria-expanded="false">
+              <span>+ How We Use This Today</span>
+              <span class="toggle-icon">+</span>
+            </button>
+            <div class="expandable-content" role="region">
+              <div class="expandable-inner">${ev.today}</div>
+            </div>
+          </div>
+          ${hasProfile ? `<button class="meet-btn" onclick="openModal('${ev.key}')">Meet ${ev.name.split(' ')[0] === 'The' ? ev.name : ev.name.split(' ')[0]} →</button>` : ''}
+        </div>
+        <div class="event-dot"><div class="dot" id="dot-${idx}"></div></div>
+        <div class="event-empty"></div>
+      </div>`;
+
+    container.insertAdjacentHTML('beforeend', eventHTML);
+
+    if (ev.meanwhile) {
+      const imagesHTML = ev.mwImages ? `
+        <div class="meanwhile-images">
+          ${ev.mwImages.map(img => `
+            <div class="meanwhile-img-wrap">
+              <img src="${img.url}" alt="${img.caption}" loading="lazy" onerror="this.closest('.meanwhile-img-wrap').style.display='none'">
+              <div class="meanwhile-img-caption">${img.caption}</div>
+            </div>`).join('')}
+        </div>` : '';
+      const mwHTML = `
+        <div class="meanwhile" data-map-key="${ev.key}">
+          <div class="meanwhile-inner">
+            <button class="expandable-header" onclick="this.closest('.meanwhile-inner').classList.toggle('open');this.setAttribute('aria-expanded',this.closest('.meanwhile-inner').classList.contains('open'));" aria-expanded="false">
+              <span>🌍 Meanwhile in the World…</span>
+              <span class="toggle-icon">+</span>
+            </button>
+            <div class="expandable-content">
+              <div class="expandable-inner">
+                ${imagesHTML}
+                ${ev.meanwhile}
+              </div>
+            </div>
+          </div>
+        </div>`;
+      container.insertAdjacentHTML('beforeend', mwHTML);
+    }
+  });
+
+  // Observe all events and meanwhiles
+  document.querySelectorAll('.event, .meanwhile').forEach(el => observer.observe(el));
+}
+
+buildTimeline();
+</script>
+</body>
+</html>
